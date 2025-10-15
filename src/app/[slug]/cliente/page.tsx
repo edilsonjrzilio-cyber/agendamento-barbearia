@@ -68,7 +68,23 @@ export default function PainelCliente() {
     { id: 4, nome: 'Sobrancelha', preco: 15.00, duracao: '15min' }
   ]
 
-  const horarios = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00']
+  // Gerar horários com intervalos de 15 minutos
+  const generateHorarios = () => {
+    const horarios = []
+    const startHour = 8
+    const endHour = 18
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        horarios.push(timeSlot)
+      }
+    }
+    
+    return horarios
+  }
+
+  const horarios = generateHorarios()
 
   const notificacoes = [
     { id: 1, titulo: 'Agendamento Confirmado', mensagem: 'Seu agendamento para amanhã às 14:00 foi confirmado', tempo: '2h atrás', lida: false },
@@ -219,7 +235,7 @@ export default function PainelCliente() {
             
             <div className="space-y-3">
               {agendamentos.map((agendamento) => (
-                <div key={agendamento.id} className="bg-[#141416] rounded-lg p-4 border border-gray-800">
+                <div key={agendamento.id} className="bg-[#1F2937] rounded-lg p-4 border border-gray-600">
                   <div className="flex justify-between items-start mb-3">
                     <div>
                       <h4 className="text-white font-medium">{agendamento.servico}</h4>
@@ -228,8 +244,8 @@ export default function PainelCliente() {
                     <div className="flex items-center gap-2">
                       <span className={`px-3 py-1 rounded-full text-xs font-medium ${
                         agendamento.status === 'Confirmado' 
-                          ? 'bg-green-600/20 text-green-400' 
-                          : 'bg-yellow-600/20 text-yellow-400'
+                          ? 'bg-green-900 text-green-300' 
+                          : 'bg-yellow-900 text-yellow-300'
                       }`}>
                         {agendamento.status}
                       </span>
@@ -275,7 +291,7 @@ export default function PainelCliente() {
             <h3 className="text-xl font-semibold text-white">Loja</h3>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
               {servicos.map((servico) => (
-                <div key={servico.id} className="bg-[#141416] rounded-lg p-4 border border-gray-800">
+                <div key={servico.id} className="bg-[#1F2937] rounded-lg p-4 border border-gray-600">
                   <h4 className="text-white font-medium mb-2">{servico.nome}</h4>
                   <p className="text-gray-300 text-sm mb-3">Duração: {servico.duracao}</p>
                   <div className="flex justify-between items-center">
@@ -294,7 +310,7 @@ export default function PainelCliente() {
         return (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white">Histórico de Agendamentos</h3>
-            <div className="bg-[#141416] rounded-lg p-6 border border-gray-800 text-center">
+            <div className="bg-[#1F2937] rounded-lg p-6 border border-gray-600 text-center">
               <History className="w-12 h-12 text-gray-400 mx-auto mb-3" />
               <p className="text-gray-300">Nenhum histórico encontrado</p>
             </div>
@@ -306,7 +322,7 @@ export default function PainelCliente() {
           <div className="space-y-6">
             <h3 className="text-xl font-semibold text-white">Meu Perfil</h3>
             
-            <div className="bg-[#141416] rounded-lg p-6 border border-gray-800">
+            <div className="bg-[#1F2937] rounded-lg p-6 border border-gray-600">
               <div className="flex items-center gap-4 mb-6">
                 <div className="w-16 h-16 bg-[#3B82F6] rounded-full flex items-center justify-center">
                   <User className="w-8 h-8 text-white" />
@@ -323,7 +339,7 @@ export default function PainelCliente() {
                   <input
                     type="text"
                     defaultValue={clienteData.nome}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
                   />
                 </div>
                 
@@ -332,7 +348,7 @@ export default function PainelCliente() {
                   <input
                     type="email"
                     defaultValue="joao@email.com"
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
                   />
                 </div>
                 
@@ -341,7 +357,7 @@ export default function PainelCliente() {
                   <input
                     type="tel"
                     defaultValue="(11) 99999-9999"
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
                   />
                 </div>
 
@@ -357,7 +373,7 @@ export default function PainelCliente() {
         return (
           <div className="space-y-4">
             <h3 className="text-xl font-semibold text-white">Sobre a Barbearia</h3>
-            <div className="bg-[#141416] rounded-lg p-6 border border-gray-800">
+            <div className="bg-[#1F2937] rounded-lg p-6 border border-gray-600">
               <h4 className="text-white font-medium text-lg mb-4">BarberShop Premium</h4>
               <p className="text-gray-300 mb-4">
                 A melhor barbearia da cidade, oferecendo serviços de qualidade com profissionais experientes.
@@ -387,9 +403,9 @@ export default function PainelCliente() {
   }
 
   return (
-    <div className="min-h-screen bg-[#0C0C0D]">
+    <div className="min-h-screen bg-[#0B0B0B]">
       {/* Header */}
-      <header className="bg-[#141416] border-b border-gray-800 px-4 py-3">
+      <header className="bg-[#1F2937] border-b border-gray-600 px-4 py-3">
         <div className="max-w-7xl mx-auto flex justify-between items-center">
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-[#3B82F6] rounded-lg flex items-center justify-center">
@@ -414,18 +430,18 @@ export default function PainelCliente() {
               </button>
 
               {showNotifications && (
-                <div className="absolute right-0 mt-2 w-80 bg-[#141416] rounded-lg shadow-lg border border-gray-800 py-2 z-50 max-h-96 overflow-y-auto">
-                  <div className="px-4 py-2 border-b border-gray-800">
+                <div className="absolute right-0 mt-2 w-80 bg-[#1F2937] rounded-lg shadow-lg border border-gray-600 py-2 z-50 max-h-96 overflow-y-auto">
+                  <div className="px-4 py-2 border-b border-gray-600">
                     <h4 className="text-white font-medium">Notificações</h4>
                   </div>
                   {notificacoes.map((notif) => (
-                    <div key={notif.id} className={`px-4 py-3 hover:bg-gray-700 transition-colors ${!notif.lida ? 'bg-gray-800' : ''}`}>
+                    <div key={notif.id} className={`px-4 py-3 hover:bg-gray-600 transition-colors ${!notif.lida ? 'bg-gray-700' : ''}`}>
                       <h5 className="text-white text-sm font-medium">{notif.titulo}</h5>
                       <p className="text-gray-300 text-xs mt-1">{notif.mensagem}</p>
                       <span className="text-gray-400 text-xs">{notif.tempo}</span>
                     </div>
                   ))}
-                  <div className="px-4 py-2 border-t border-gray-800">
+                  <div className="px-4 py-2 border-t border-gray-600">
                     <button className="text-[#3B82F6] text-sm hover:text-blue-400">
                       Ver todas as notificações
                     </button>
@@ -446,13 +462,13 @@ export default function PainelCliente() {
               </button>
 
               {showProfileMenu && (
-                <div className="absolute right-0 mt-2 w-48 bg-[#141416] rounded-lg shadow-lg border border-gray-800 py-2 z-50">
+                <div className="absolute right-0 mt-2 w-48 bg-[#1F2937] rounded-lg shadow-lg border border-gray-600 py-2 z-50">
                   <button
                     onClick={() => {
                       setActiveTab('perfil')
                       setShowProfileMenu(false)
                     }}
-                    className="w-full text-left px-4 py-2 text-gray-200 hover:text-white hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-gray-200 hover:text-white hover:bg-gray-600 transition-colors flex items-center gap-2"
                   >
                     <User className="w-4 h-4" />
                     Meu Perfil
@@ -462,12 +478,12 @@ export default function PainelCliente() {
                       setShowConfiguracoes(true)
                       setShowProfileMenu(false)
                     }}
-                    className="w-full text-left px-4 py-2 text-gray-200 hover:text-white hover:bg-gray-700 transition-colors flex items-center gap-2"
+                    className="w-full text-left px-4 py-2 text-gray-200 hover:text-white hover:bg-gray-600 transition-colors flex items-center gap-2"
                   >
                     <Settings className="w-4 h-4" />
                     Configurações
                   </button>
-                  <button className="w-full text-left px-4 py-2 text-gray-200 hover:text-white hover:bg-gray-700 transition-colors">
+                  <button className="w-full text-left px-4 py-2 text-gray-200 hover:text-white hover:bg-gray-600 transition-colors">
                     Sair
                   </button>
                 </div>
@@ -480,7 +496,7 @@ export default function PainelCliente() {
       <div className="max-w-7xl mx-auto px-4 py-6">
         {/* Seção de Boas-vindas */}
         <div className="mb-8">
-          <div className="bg-gradient-to-r from-[#141416] to-[#0C0C0D] rounded-lg p-6 border border-gray-800">
+          <div className="bg-gradient-to-r from-[#1F2937] to-[#374151] rounded-lg p-6 border border-gray-600">
             <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
               <div>
                 <h1 className="text-2xl font-bold text-white mb-2">
@@ -518,7 +534,7 @@ export default function PainelCliente() {
 
         {/* Estatísticas */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8">
-          <div className="bg-[#141416] rounded-lg p-4 border border-gray-800">
+          <div className="bg-[#1F2937] rounded-lg p-4 border border-gray-600">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-[#3B82F6] rounded-lg flex items-center justify-center">
                 <Users className="w-5 h-5 text-white" />
@@ -530,7 +546,7 @@ export default function PainelCliente() {
             </div>
           </div>
 
-          <div className="bg-[#141416] rounded-lg p-4 border border-gray-800">
+          <div className="bg-[#1F2937] rounded-lg p-4 border border-gray-600">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-600 rounded-lg flex items-center justify-center">
                 <DollarSign className="w-5 h-5 text-white" />
@@ -542,7 +558,7 @@ export default function PainelCliente() {
             </div>
           </div>
 
-          <div className="bg-[#141416] rounded-lg p-4 border border-gray-800">
+          <div className="bg-[#1F2937] rounded-lg p-4 border border-gray-600">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-purple-600 rounded-lg flex items-center justify-center">
                 <Calendar className="w-5 h-5 text-white" />
@@ -554,7 +570,7 @@ export default function PainelCliente() {
             </div>
           </div>
 
-          <div className="bg-[#141416] rounded-lg p-4 border border-gray-800">
+          <div className="bg-[#1F2937] rounded-lg p-4 border border-gray-600">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-yellow-600 rounded-lg flex items-center justify-center">
                 <Star className="w-5 h-5 text-white" />
@@ -567,9 +583,9 @@ export default function PainelCliente() {
           </div>
         </div>
 
-        {/* Navegação por Abas - FIXA */}
-        <div className="mb-6 sticky top-0 z-40 bg-[#0C0C0D] py-4">
-          <div className="flex flex-wrap gap-2 bg-[#141416] p-2 rounded-lg border border-gray-800">
+        {/* Navegação por Abas */}
+        <div className="mb-6">
+          <div className="flex flex-wrap gap-2 bg-[#1F2937] p-2 rounded-lg border border-gray-600">
             {[
               { id: 'agendamentos', label: 'Meus Agendamentos', icon: Calendar },
               { id: 'loja', label: 'Loja', icon: Scissors },
@@ -585,7 +601,7 @@ export default function PainelCliente() {
                   className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-all duration-300 ${
                     activeTab === tab.id
                       ? 'bg-[#3B82F6] text-white'
-                      : 'text-gray-300 hover:text-white hover:bg-gray-700'
+                      : 'text-gray-300 hover:text-white hover:bg-gray-600'
                   }`}
                 >
                   <Icon className="w-4 h-4" />
@@ -597,7 +613,7 @@ export default function PainelCliente() {
         </div>
 
         {/* Conteúdo das Abas */}
-        <div className="bg-[#141416] rounded-lg p-6 border border-gray-800">
+        <div className="bg-[#1F2937] rounded-lg p-6 border border-gray-600">
           {renderContent()}
         </div>
       </div>
@@ -605,7 +621,7 @@ export default function PainelCliente() {
       {/* Modal de Configurações */}
       {showConfiguracoes && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#141416] rounded-lg p-6 w-full max-w-md border border-gray-800">
+          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-md border border-gray-600">
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-semibold text-white">Configurações</h3>
               <button
@@ -701,7 +717,7 @@ export default function PainelCliente() {
       {/* Modal de Novo Agendamento com Calendário */}
       {showAgendamentoModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#141416] rounded-lg p-6 w-full max-w-4xl border border-gray-800 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-4xl border border-gray-600 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold text-white mb-4">
               {editingAgendamento ? 'Editar Agendamento' : 'Novo Agendamento'}
             </h3>
@@ -715,7 +731,7 @@ export default function PainelCliente() {
                 <div className="flex items-center justify-between mb-4">
                   <button 
                     onClick={previousMonth}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
                   >
                     <ChevronLeft className="w-5 h-5 text-white" />
                   </button>
@@ -724,14 +740,14 @@ export default function PainelCliente() {
                   </h4>
                   <button 
                     onClick={nextMonth}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                    className="p-2 hover:bg-gray-600 rounded-lg transition-colors"
                   >
                     <ChevronRight className="w-5 h-5 text-white" />
                   </button>
                 </div>
 
                 {/* Calendário */}
-                <div className="bg-[#0C0C0D] rounded-lg p-4 border border-gray-800">
+                <div className="bg-[#374151] rounded-lg p-4 border border-gray-500">
                   <div className="grid grid-cols-7 gap-2 mb-4">
                     {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
                       <div key={day} className="text-center text-gray-300 text-sm p-2">{day}</div>
@@ -752,7 +768,7 @@ export default function PainelCliente() {
                           day && day.available
                             ? selectedDate === day.date
                               ? 'bg-[#3B82F6] text-white'
-                              : 'bg-gray-700 text-white hover:bg-gray-600'
+                              : 'bg-gray-600 text-white hover:bg-gray-500'
                             : day && day.isPast
                             ? 'text-gray-500 cursor-not-allowed'
                             : day
@@ -774,7 +790,7 @@ export default function PainelCliente() {
                   <select
                     value={selectedBarbeiro}
                     onChange={(e) => setSelectedBarbeiro(e.target.value)}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
                   >
                     <option value="">Selecione um barbeiro</option>
                     {barbeiros.map((barbeiro) => (
@@ -790,7 +806,7 @@ export default function PainelCliente() {
                   <select
                     value={selectedService}
                     onChange={(e) => setSelectedService(e.target.value)}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
                   >
                     <option value="">Selecione um serviço</option>
                     {servicos.map((servico) => (
@@ -807,30 +823,33 @@ export default function PainelCliente() {
                     type="text"
                     value={selectedDate ? new Date(selectedDate).toLocaleDateString('pt-BR') : ''}
                     readOnly
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white"
                     placeholder="Selecione uma data no calendário"
                   />
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 text-sm mb-2">Horário</label>
-                  <select
-                    value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
-                  >
-                    <option value="">Selecione um horário</option>
+                  <label className="block text-gray-300 text-sm mb-2">Horário (intervalos de 15 min)</label>
+                  <div className="grid grid-cols-4 gap-2 max-h-48 overflow-y-auto bg-[#374151] p-3 rounded-lg border border-gray-500">
                     {horarios.map((horario) => (
-                      <option key={horario} value={horario}>
+                      <button
+                        key={horario}
+                        onClick={() => setSelectedTime(horario)}
+                        className={`p-2 text-xs rounded-lg transition-colors ${
+                          selectedTime === horario
+                            ? 'bg-[#3B82F6] text-white'
+                            : 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
+                        }`}
+                      >
                         {horario}
-                      </option>
+                      </button>
                     ))}
-                  </select>
+                  </div>
                 </div>
 
                 {/* Resumo do Agendamento */}
                 {selectedBarbeiro && selectedService && selectedDate && selectedTime && (
-                  <div className="bg-[#0C0C0D] rounded-lg p-4 border border-gray-800">
+                  <div className="bg-[#374151] rounded-lg p-4 border border-gray-500">
                     <h5 className="text-white font-medium mb-2">Resumo do Agendamento</h5>
                     <div className="space-y-1 text-sm text-gray-200">
                       <p><strong>Barbeiro:</strong> {selectedBarbeiro}</p>

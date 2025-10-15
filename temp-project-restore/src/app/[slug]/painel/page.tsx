@@ -63,8 +63,7 @@ import {
   Lock,
   Shield,
   CreditCard,
-  History,
-  UserPlus
+  History
 } from 'lucide-react'
 
 export default function PainelBarbeiro() {
@@ -82,12 +81,10 @@ export default function PainelBarbeiro() {
   const [showTicketModal, setShowTicketModal] = useState(false)
   const [showNewServiceModal, setShowNewServiceModal] = useState(false)
   const [showNewProductModal, setShowNewProductModal] = useState(false)
-  const [showNewTeamMemberModal, setShowNewTeamMemberModal] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState(null)
   const [editingClient, setEditingClient] = useState(null)
   const [editingService, setEditingService] = useState(null)
   const [editingProduct, setEditingProduct] = useState(null)
-  const [editingTeamMember, setEditingTeamMember] = useState(null)
 
   // Estados para o novo sistema de agendamento
   const [selectedBarber, setSelectedBarber] = useState(null)
@@ -181,24 +178,6 @@ export default function PainelBarbeiro() {
     ativo: true
   })
 
-  // Estados para equipe
-  const [teamMemberForm, setTeamMemberForm] = useState({
-    nome: '',
-    especialidade: '',
-    telefone: '',
-    email: '',
-    salario: 100,
-    comissao: 10,
-    ativo: true
-  })
-
-  const [equipe, setEquipe] = useState([
-    { id: 1, nome: "João Silva", especialidade: "Corte Clássico", telefone: "(11) 99999-9999", email: "joao@barbearia.com", salario: 100, comissao: 15, ativo: true },
-    { id: 2, nome: "Pedro Santos", especialidade: "Barba & Bigode", telefone: "(11) 98888-8888", email: "pedro@barbearia.com", salario: 100, comissao: 12, ativo: true },
-    { id: 3, nome: "Carlos Oliveira", especialidade: "Corte Moderno", telefone: "(11) 97777-7777", email: "carlos@barbearia.com", salario: 100, comissao: 10, ativo: true },
-    { id: 4, nome: "Rafael Costa", especialidade: "Degradê", telefone: "(11) 96666-6666", email: "rafael@barbearia.com", salario: 100, comissao: 8, ativo: false }
-  ])
-
   // Estados para personalização expandida
   const [personalizacaoForm, setPersonalizacaoForm] = useState({
     nomeBarbearia: barbeiro.barbearia,
@@ -288,7 +267,6 @@ export default function PainelBarbeiro() {
     { id: 'agenda', label: 'Agenda', icon: CalendarDays },
     { id: 'servicos', label: 'Serviços', icon: Scissors },
     { id: 'clientes', label: 'Clientes', icon: UserCheck },
-    { id: 'equipe', label: 'Equipe', icon: Users },
     { id: 'loja', label: 'Loja', icon: Store },
     { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
@@ -308,27 +286,24 @@ export default function PainelBarbeiro() {
     })
   }, [])
 
-  // Função para gerar horários disponíveis com intervalos de 15 minutos
+  // Função para gerar horários disponíveis
   const generateAvailableHours = (date, barberId) => {
     const hours = []
     const startHour = 8
     const endHour = 18
     
     for (let hour = startHour; hour < endHour; hour++) {
-      // Gerar intervalos de 15 em 15 minutos
-      for (let minute = 0; minute < 60; minute += 15) {
-        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        const isBooked = agendamentos.some(ag => 
-          ag.data === date && 
-          ag.horario === timeSlot && 
-          ag.barbeiro === barbeiros.find(b => b.id === barberId)?.nome
-        )
-        
-        hours.push({
-          time: timeSlot,
-          available: !isBooked
-        })
-      }
+      const timeSlot = `${hour.toString().padStart(2, '0')}:00`
+      const isBooked = agendamentos.some(ag => 
+        ag.data === date && 
+        ag.horario === timeSlot && 
+        ag.barbeiro === barbeiros.find(b => b.id === barberId)?.nome
+      )
+      
+      hours.push({
+        time: timeSlot,
+        available: !isBooked
+      })
     }
     
     return hours
@@ -644,65 +619,6 @@ export default function PainelBarbeiro() {
       produto.id === id 
         ? { ...produto, ativo: !produto.ativo }
         : produto
-    ))
-  }
-
-  // Funções para gerenciar equipe
-  const handleSaveTeamMember = () => {
-    if (!teamMemberForm.nome || !teamMemberForm.especialidade || !teamMemberForm.telefone) {
-      alert('Por favor, preencha todos os campos obrigatórios.')
-      return
-    }
-
-    if (editingTeamMember) {
-      // Editar membro existente
-      setEquipe(prev => prev.map(membro => 
-        membro.id === editingTeamMember.id 
-          ? { ...membro, ...teamMemberForm, id: editingTeamMember.id }
-          : membro
-      ))
-      alert('Membro da equipe atualizado com sucesso!')
-    } else {
-      // Criar novo membro
-      const newTeamMember = {
-        id: Date.now(),
-        ...teamMemberForm
-      }
-      setEquipe(prev => [...prev, newTeamMember])
-      alert('Membro da equipe adicionado com sucesso!')
-    }
-
-    setShowNewTeamMemberModal(false)
-    setEditingTeamMember(null)
-    setTeamMemberForm({ nome: '', especialidade: '', telefone: '', email: '', salario: 100, comissao: 10, ativo: true })
-  }
-
-  const handleEditTeamMember = (membro) => {
-    setEditingTeamMember(membro)
-    setTeamMemberForm({
-      nome: membro.nome,
-      especialidade: membro.especialidade,
-      telefone: membro.telefone,
-      email: membro.email || '',
-      salario: membro.salario,
-      comissao: membro.comissao,
-      ativo: membro.ativo
-    })
-    setShowNewTeamMemberModal(true)
-  }
-
-  const handleDeleteTeamMember = (id) => {
-    if (confirm('Tem certeza que deseja excluir este membro da equipe?')) {
-      setEquipe(prev => prev.filter(membro => membro.id !== id))
-      alert('Membro da equipe excluído com sucesso!')
-    }
-  }
-
-  const handleToggleTeamMemberStatus = (id) => {
-    setEquipe(prev => prev.map(membro => 
-      membro.id === id 
-        ? { ...membro, ativo: !membro.ativo }
-        : membro
     ))
   }
 
@@ -1181,78 +1097,6 @@ export default function PainelBarbeiro() {
                   </button>
                   <button 
                     onClick={() => handleDeleteClient(cliente.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-
-  const renderEquipe = () => (
-    <div className="space-y-6">
-      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Gerenciar Equipe</h2>
-          <button 
-            onClick={() => {
-              setEditingTeamMember(null)
-              setTeamMemberForm({ nome: '', especialidade: '', telefone: '', email: '', salario: 100, comissao: 10, ativo: true })
-              setShowNewTeamMemberModal(true)
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Novo Membro</span>
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {equipe.map((membro) => (
-            <div key={membro.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-600/20 p-3 rounded-xl">
-                  <User className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-white">{membro.nome}</p>
-                  <p className="text-sm text-gray-400">{membro.especialidade}</p>
-                  <p className="text-xs text-gray-500">{membro.telefone}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="text-sm text-green-400">R$ {membro.salario}</p>
-                  <p className="text-xs text-gray-400">{membro.comissao}% comissão</p>
-                </div>
-                <button
-                  onClick={() => handleToggleTeamMemberStatus(membro.id)}
-                  className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
-                    membro.ativo ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                  }`}
-                >
-                  {membro.ativo ? 'Ativo' : 'Inativo'}
-                </button>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleEditTeamMember(membro)}
-                    className="text-blue-400 hover:text-blue-300"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => window.open(`https://wa.me/${membro.telefone.replace(/\D/g, '')}`)}
-                    className="text-green-400 hover:text-green-300"
-                  >
-                    <Phone className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteTeamMember(membro.id)}
                     className="text-red-400 hover:text-red-300"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -2292,8 +2136,6 @@ export default function PainelBarbeiro() {
         return renderServicos()
       case 'clientes':
         return renderClientes()
-      case 'equipe':
-        return renderEquipe()
       case 'loja':
         return renderLoja()
       case 'whatsapp':
@@ -2528,120 +2370,6 @@ export default function PainelBarbeiro() {
         </div>
       )}
 
-      {/* Modal Novo/Editar Membro da Equipe */}
-      {showNewTeamMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">
-                {editingTeamMember ? 'Editar Membro' : 'Novo Membro da Equipe'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowNewTeamMemberModal(false)
-                  setEditingTeamMember(null)
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Nome</label>
-                <input
-                  type="text"
-                  placeholder="Nome completo"
-                  value={teamMemberForm.nome}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, nome: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Especialidade</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Corte Clássico"
-                  value={teamMemberForm.especialidade}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, especialidade: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Telefone</label>
-                <input
-                  type="tel"
-                  placeholder="(11) 99999-9999"
-                  value={teamMemberForm.telefone}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, telefone: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Email (opcional)</label>
-                <input
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={teamMemberForm.email}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, email: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Salário (R$)</label>
-                  <input
-                    type="number"
-                    placeholder="100"
-                    value={teamMemberForm.salario}
-                    onChange={(e) => setTeamMemberForm({...teamMemberForm, salario: parseFloat(e.target.value) || 100})}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Comissão (%)</label>
-                  <input
-                    type="number"
-                    placeholder="10"
-                    value={teamMemberForm.comissao}
-                    onChange={(e) => setTeamMemberForm({...teamMemberForm, comissao: parseFloat(e.target.value) || 10})}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={teamMemberForm.ativo}
-                    onChange={(e) => setTeamMemberForm({...teamMemberForm, ativo: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-400">Membro ativo</span>
-                </label>
-              </div>
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={() => {
-                    setShowNewTeamMemberModal(false)
-                    setEditingTeamMember(null)
-                  }}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveTeamMember}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
-                >
-                  {editingTeamMember ? 'Atualizar' : 'Adicionar'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
       {/* Modal Seleção de Barbeiro */}
       {showBarberSelection && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
@@ -2754,21 +2482,21 @@ export default function PainelBarbeiro() {
               {/* Horários */}
               <div>
                 <h4 className="font-semibold text-white mb-4">
-                  {selectedDateForBooking ? 'Horários Disponíveis (15 min)' : 'Selecione uma data primeiro'}
+                  {selectedDateForBooking ? 'Horários Disponíveis' : 'Selecione uma data primeiro'}
                 </h4>
-                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800 max-h-96 overflow-y-auto">
+                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
                   {selectedDateForBooking ? (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {availableHours.map((hour, index) => (
                         <button
                           key={index}
                           onClick={() => selectHour(hour)}
                           disabled={!hour.available}
-                          className={`p-2 text-xs rounded-lg transition-colors ${
+                          className={`p-2 text-sm rounded-lg transition-colors ${
                             hour.available
                               ? selectedHour === hour.time
                                 ? 'bg-blue-600 text-white'
-                                : 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
+                                : 'bg-gray-700 text-white hover:bg-gray-600'
                               : 'bg-red-900/20 text-red-400 cursor-not-allowed'
                           }`}
                         >

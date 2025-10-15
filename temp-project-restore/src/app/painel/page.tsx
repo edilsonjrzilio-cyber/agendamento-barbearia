@@ -308,27 +308,24 @@ export default function PainelBarbeiro() {
     })
   }, [])
 
-  // Função para gerar horários disponíveis com intervalos de 15 minutos
+  // Função para gerar horários disponíveis
   const generateAvailableHours = (date, barberId) => {
     const hours = []
     const startHour = 8
     const endHour = 18
     
     for (let hour = startHour; hour < endHour; hour++) {
-      // Gerar intervalos de 15 em 15 minutos
-      for (let minute = 0; minute < 60; minute += 15) {
-        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        const isBooked = agendamentos.some(ag => 
-          ag.data === date && 
-          ag.horario === timeSlot && 
-          ag.barbeiro === barbeiros.find(b => b.id === barberId)?.nome
-        )
-        
-        hours.push({
-          time: timeSlot,
-          available: !isBooked
-        })
-      }
+      const timeSlot = `${hour.toString().padStart(2, '0')}:00`
+      const isBooked = agendamentos.some(ag => 
+        ag.data === date && 
+        ag.horario === timeSlot && 
+        ag.barbeiro === barbeiros.find(b => b.id === barberId)?.nome
+      )
+      
+      hours.push({
+        time: timeSlot,
+        available: !isBooked
+      })
     }
     
     return hours
@@ -2754,21 +2751,21 @@ export default function PainelBarbeiro() {
               {/* Horários */}
               <div>
                 <h4 className="font-semibold text-white mb-4">
-                  {selectedDateForBooking ? 'Horários Disponíveis (15 min)' : 'Selecione uma data primeiro'}
+                  {selectedDateForBooking ? 'Horários Disponíveis' : 'Selecione uma data primeiro'}
                 </h4>
-                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800 max-h-96 overflow-y-auto">
+                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
                   {selectedDateForBooking ? (
-                    <div className="grid grid-cols-4 gap-2">
+                    <div className="grid grid-cols-3 gap-2">
                       {availableHours.map((hour, index) => (
                         <button
                           key={index}
                           onClick={() => selectHour(hour)}
                           disabled={!hour.available}
-                          className={`p-2 text-xs rounded-lg transition-colors ${
+                          className={`p-2 text-sm rounded-lg transition-colors ${
                             hour.available
                               ? selectedHour === hour.time
                                 ? 'bg-blue-600 text-white'
-                                : 'bg-green-600/20 text-green-400 hover:bg-green-600/30'
+                                : 'bg-gray-700 text-white hover:bg-gray-600'
                               : 'bg-red-900/20 text-red-400 cursor-not-allowed'
                           }`}
                         >
