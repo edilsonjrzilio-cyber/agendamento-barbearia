@@ -300,13 +300,13 @@ export default function PainelBarbeiro() {
   // Estados para dados dinâmicos
   const [agendamentos, setAgendamentos] = useState([
     { id: 1, cliente: "Carlos Silva", servico: "Corte + Barba", horario: "09:00", status: "confirmado", telefone: "(11) 98888-8888", valor: 60, data: "2024-01-20", barbeiro: "João Silva" },
-    { id: 2, cliente: "Pedro Santos", servico: "Corte Simples", horario: "10:15", status: "confirmado", telefone: "(11) 97777-7777", valor: 35, data: "2024-01-20", barbeiro: "Pedro Santos" },
-    { id: 3, cliente: "Lucas Oliveira", servico: "Barba", horario: "14:30", status: "pendente", telefone: "(11) 96666-6666", valor: 25, data: "2024-01-20", barbeiro: "Carlos Oliveira" },
-    { id: 4, cliente: "Rafael Costa", servico: "Corte + Barba", horario: "15:45", status: "confirmado", telefone: "(11) 95555-5555", valor: 60, data: "2024-01-20", barbeiro: "João Silva" },
-    { id: 5, cliente: "Ana Maria", servico: "Corte Feminino", horario: "11:30", status: "confirmado", telefone: "(11) 94444-4444", valor: 45, data: "2024-01-21", barbeiro: "Pedro Santos" },
-    { id: 6, cliente: "José Santos", servico: "Barba", horario: "16:15", status: "pendente", telefone: "(11) 93333-3333", valor: 25, data: "2024-01-21", barbeiro: "Carlos Oliveira" },
-    { id: 7, cliente: "Maria Silva", servico: "Corte + Barba", horario: "09:45", status: "confirmado", telefone: "(11) 92222-2222", valor: 60, data: "2024-01-22", barbeiro: "João Silva" },
-    { id: 8, cliente: "Paulo Oliveira", servico: "Corte Simples", horario: "13:15", status: "confirmado", telefone: "(11) 91111-1111", valor: 35, data: "2024-01-22", barbeiro: "Pedro Santos" }
+    { id: 2, cliente: "Pedro Santos", servico: "Corte Simples", horario: "10:30", status: "confirmado", telefone: "(11) 97777-7777", valor: 35, data: "2024-01-20", barbeiro: "Pedro Santos" },
+    { id: 3, cliente: "Lucas Oliveira", servico: "Barba", horario: "14:00", status: "pendente", telefone: "(11) 96666-6666", valor: 25, data: "2024-01-20", barbeiro: "Carlos Oliveira" },
+    { id: 4, cliente: "Rafael Costa", servico: "Corte + Barba", horario: "15:30", status: "confirmado", telefone: "(11) 95555-5555", valor: 60, data: "2024-01-20", barbeiro: "João Silva" },
+    { id: 5, cliente: "Ana Maria", servico: "Corte Feminino", horario: "11:00", status: "confirmado", telefone: "(11) 94444-4444", valor: 45, data: "2024-01-21", barbeiro: "Pedro Santos" },
+    { id: 6, cliente: "José Santos", servico: "Barba", horario: "16:00", status: "pendente", telefone: "(11) 93333-3333", valor: 25, data: "2024-01-21", barbeiro: "Carlos Oliveira" },
+    { id: 7, cliente: "Maria Silva", servico: "Corte + Barba", horario: "09:30", status: "confirmado", telefone: "(11) 92222-2222", valor: 60, data: "2024-01-22", barbeiro: "João Silva" },
+    { id: 8, cliente: "Paulo Oliveira", servico: "Corte Simples", horario: "13:00", status: "confirmado", telefone: "(11) 91111-1111", valor: 35, data: "2024-01-22", barbeiro: "Pedro Santos" }
   ])
 
   const [clientes, setClientes] = useState([
@@ -454,26 +454,24 @@ export default function PainelBarbeiro() {
     alert(`Lembrete enviado para ${agendamento.cliente}!`)
   }
 
-  // Função para gerar horários disponíveis de 15 em 15 minutos
+  // Função para gerar horários disponíveis
   const generateAvailableHours = (date, barberId) => {
     const hours = []
     const startHour = 8
     const endHour = 18
     
     for (let hour = startHour; hour < endHour; hour++) {
-      for (let minute = 0; minute < 60; minute += 15) {
-        const timeSlot = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
-        const isBooked = agendamentos.some(ag => 
-          ag.data === date && 
-          ag.horario === timeSlot && 
-          ag.barbeiro === barbeiros.find(b => b.id === barberId)?.nome
-        )
-        
-        hours.push({
-          time: timeSlot,
-          available: !isBooked
-        })
-      }
+      const timeSlot = `${hour.toString().padStart(2, '0')}:00`
+      const isBooked = agendamentos.some(ag => 
+        ag.data === date && 
+        ag.horario === timeSlot && 
+        ag.barbeiro === barbeiros.find(b => b.id === barberId)?.nome
+      )
+      
+      hours.push({
+        time: timeSlot,
+        available: !isBooked
+      })
     }
     
     return hours
@@ -1138,10 +1136,1774 @@ export default function PainelBarbeiro() {
     </div>
   )
 
+  const renderAgenda = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Agenda Completa</h2>
+          <div className="flex items-center space-x-4">
+            {/* Filtro de Barbeiro */}
+            <select
+              value={selectedBarbeirFilter}
+              onChange={(e) => setSelectedBarbeirFilter(e.target.value)}
+              className="bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+            >
+              <option value="todos">Todos os Barbeiros</option>
+              {barbeiros.filter(b => b.ativo).map(barbeiro => (
+                <option key={barbeiro.id} value={barbeiro.nome}>{barbeiro.nome}</option>
+              ))}
+            </select>
+
+            {/* Toggle de Visualização */}
+            <div className="flex bg-[#0C0C0D] rounded-xl border border-gray-800 p-1">
+              <button
+                onClick={() => setAgendaView('calendario')}
+                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                  agendaView === 'calendario' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Calendar className="w-4 h-4 mr-2 inline" />
+                Calendário
+              </button>
+              <button
+                onClick={() => setAgendaView('lista')}
+                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                  agendaView === 'lista' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Lista
+              </button>
+            </div>
+
+            <button 
+              onClick={startNewAppointment}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Novo Agendamento</span>
+            </button>
+          </div>
+        </div>
+
+        {agendaView === 'calendario' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendário */}
+            <div className="lg:col-span-2">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                {/* Navegação do Calendário */}
+                <div className="flex items-center justify-between mb-6">
+                  <button 
+                    onClick={agendaPreviousMonth}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-white" />
+                  </button>
+                  <h3 className="text-xl font-semibold text-white">
+                    {getMonthName(agendaCurrentMonth)} {agendaCurrentYear}
+                  </h3>
+                  <button 
+                    onClick={agendaNextMonth}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+
+                {/* Dias da Semana */}
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                    <div key={day} className="text-center text-gray-400 text-sm p-2 font-medium">{day}</div>
+                  ))}
+                </div>
+
+                {/* Calendário */}
+                <div className="grid grid-cols-7 gap-2">
+                  {generateAgendaCalendar().map((day, index) => (
+                    <button
+                      key={index}
+                      onClick={() => day && setSelectedAgendaDate(day.date)}
+                      className={`relative p-3 text-sm rounded-lg transition-all duration-200 min-h-[60px] ${
+                        day 
+                          ? day.isSelected
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : day.isToday
+                            ? 'bg-blue-600/20 text-blue-400 border border-blue-600/50'
+                            : day.agendamentos.length > 0
+                            ? 'bg-green-600/20 text-white hover:bg-green-600/30'
+                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          : ''
+                      }`}
+                    >
+                      {day && (
+                        <>
+                          <span className="block font-medium">{day.day}</span>
+                          {day.agendamentos.length > 0 && (
+                            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                              <div className="flex space-x-1">
+                                {day.agendamentos.slice(0, 3).map((_, i) => (
+                                  <div key={i} className="w-1.5 h-1.5 bg-current rounded-full opacity-70"></div>
+                                ))}
+                                {day.agendamentos.length > 3 && (
+                                  <span className="text-xs">+{day.agendamentos.length - 3}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
+
+            {/* Agendamentos do Dia Selecionado */}
+            <div className="space-y-4">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  {new Date(selectedAgendaDate).toLocaleDateString('pt-BR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long' 
+                  })}
+                </h3>
+                
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {getFilteredAgendamentos().length > 0 ? (
+                    getFilteredAgendamentos().map((agendamento) => (
+                      <div key={agendamento.id} className="p-4 bg-[#141416] rounded-xl border border-gray-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <Clock className="w-4 h-4 text-blue-400" />
+                            <span className="font-medium text-white">{agendamento.horario}</span>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            agendamento.status === 'confirmado' 
+                              ? 'bg-green-600/20 text-green-400' 
+                              : 'bg-yellow-600/20 text-yellow-400'
+                          }`}>
+                            {agendamento.status}
+                          </span>
+                        </div>
+                        <p className="font-medium text-white">{agendamento.cliente}</p>
+                        <p className="text-sm text-gray-400">{agendamento.servico}</p>
+                        <p className="text-xs text-gray-500 mb-2">Barbeiro: {agendamento.barbeiro}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-medium">R$ {agendamento.valor}</span>
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => handleEditAppointment(agendamento)}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => window.open(`https://wa.me/${agendamento.telefone.replace(/\D/g, '')}`)}
+                              className="text-green-400 hover:text-green-300"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAppointment(agendamento.id)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400">Nenhum agendamento para este dia</p>
+                      <button 
+                        onClick={startNewAppointment}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                      >
+                        Criar Agendamento
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Resumo do Dia */}
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                <h4 className="font-semibold text-white mb-4">Resumo do Dia</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total de agendamentos:</span>
+                    <span className="text-white font-medium">{getFilteredAgendamentos().length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Faturamento previsto:</span>
+                    <span className="text-green-400 font-medium">
+                      R$ {getFilteredAgendamentos().reduce((total, ag) => total + ag.valor, 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Confirmados:</span>
+                    <span className="text-green-400 font-medium">
+                      {getFilteredAgendamentos().filter(ag => ag.status === 'confirmado').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Pendentes:</span>
+                    <span className="text-yellow-400 font-medium">
+                      {getFilteredAgendamentos().filter(ag => ag.status === 'pendente').length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Visualização em Lista
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <input
+                  type="date"
+                  value={selectedAgendaDate}
+                  onChange={(e) => setSelectedAgendaDate(e.target.value)}
+                  className="bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                />
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente..."
+                    className="bg-[#0C0C0D] border border-gray-800 rounded-xl pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="text-gray-400 hover:text-white p-2">
+                  <Filter className="w-4 h-4" />
+                </button>
+                <button className="text-gray-400 hover:text-white p-2">
+                  <Download className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {getFilteredAgendamentos().map((agendamento) => (
+              <div key={agendamento.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-gray-700 w-12 h-12 rounded-full flex items-center justify-center">
+                    <User className="w-6 h-6 text-gray-300" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">{agendamento.cliente}</p>
+                    <p className="text-sm text-gray-400">{agendamento.servico} • {agendamento.telefone}</p>
+                    <p className="text-xs text-gray-500">Barbeiro: {agendamento.barbeiro}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-6">
+                  <div className="text-center">
+                    <p className="font-medium text-white">{agendamento.horario}</p>
+                    <p className="text-sm text-green-400">R$ {agendamento.valor}</p>
+                  </div>
+                  <span className={`px-3 py-1 text-xs rounded-full ${
+                    agendamento.status === 'confirmado' 
+                      ? 'bg-green-600/20 text-green-400' 
+                      : 'bg-yellow-600/20 text-yellow-400'
+                  }`}>
+                    {agendamento.status}
+                  </span>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleEditAppointment(agendamento)}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => window.open(`https://wa.me/${agendamento.telefone.replace(/\D/g, '')}`)}
+                      className="text-green-400 hover:text-green-300"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteAppointment(agendamento.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+    </div>
+  )
+
+  const renderServicos = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Gerenciar Serviços</h2>
+          <button 
+            onClick={() => {
+              setEditingService(null)
+              setServiceForm({ nome: '', preco: 0, duracao: 0, ativo: true })
+              setShowNewServiceModal(true)
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Serviço</span>
+          </button>
+        </div>
+
+        <div className="space-y-4">
+          {servicos.map((servico) => (
+            <div key={servico.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
+              <div className="flex items-center space-x-4">
+                <div className="bg-blue-600/20 p-3 rounded-xl">
+                  <Scissors className="w-5 h-5 text-blue-400" />
+                </div>
+                <div>
+                  <p className="font-medium text-white">{servico.nome}</p>
+                  <p className="text-sm text-gray-400">{servico.duracao} min • R$ {servico.preco}</p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-4">
+                <button
+                  onClick={() => handleToggleServiceStatus(servico.id)}
+                  className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
+                    servico.ativo ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                  }`}
+                >
+                  {servico.ativo ? 'Ativo' : 'Inativo'}
+                </button>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => handleEditService(servico)}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteService(servico.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderClientes = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Gerenciar Clientes</h2>
+          <div className="flex space-x-2">
+            <div className="relative">
+              <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+              <input
+                type="text"
+                placeholder="Buscar cliente..."
+                className="bg-[#0C0C0D] border border-gray-800 rounded-xl pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <button 
+              onClick={() => {
+                setEditingClient(null)
+                setClientForm({ nome: '', telefone: '', email: '' })
+                setShowNewClientModal(true)
+              }}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Novo Cliente</span>
+            </button>
+          </div>
+        </div>
+
+        <div className="space-y-4">
+          {clientes.map((cliente) => (
+            <div key={cliente.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
+              <div className="flex items-center space-x-4">
+                <div className="bg-gray-700 w-12 h-12 rounded-full flex items-center justify-center">
+                  <User className="w-6 h-6 text-gray-300" />
+                </div>
+                <div>
+                  <p className="font-medium text-white">{cliente.nome}</p>
+                  <p className="text-sm text-gray-400">{cliente.telefone}</p>
+                  <p className="text-xs text-gray-500">Último corte: {cliente.ultimoCorte}</p>
+                </div>
+              </div>
+              <div className="text-right">
+                <p className="text-sm text-green-400">R$ {cliente.totalGasto} total</p>
+                <div className="flex items-center space-x-1">
+                  <Star className="w-4 h-4 text-yellow-400 fill-current" />
+                  <span className="text-sm text-white">{cliente.avaliacoes}</span>
+                </div>
+                <div className="flex space-x-2 mt-2">
+                  <button 
+                    onClick={() => handleEditClient(cliente)}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    <Edit className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => window.open(`https://wa.me/${cliente.telefone.replace(/\D/g, '')}`)}
+                    className="text-green-400 hover:text-green-300"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => handleDeleteClient(cliente.id)}
+                    className="text-red-400 hover:text-red-300"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderLoja = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Gerenciar Loja</h2>
+          <button 
+            onClick={() => {
+              setEditingProduct(null)
+              setProductForm({ nome: '', preco: 0, estoque: 0, categoria: '', ativo: true })
+              setShowNewProductModal(true)
+            }}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Produto</span>
+          </button>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {produtos.map((produto) => (
+            <div key={produto.id} className="bg-[#0C0C0D] rounded-xl border border-gray-800 p-4">
+              <div className="flex items-center justify-between mb-4">
+                <div className="bg-purple-600/20 p-2 rounded-lg">
+                  <Package className="w-5 h-5 text-purple-400" />
+                </div>
+                <button
+                  onClick={() => handleToggleProductStatus(produto.id)}
+                  className={`px-2 py-1 rounded-full text-xs cursor-pointer transition-colors ${
+                    produto.ativo ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
+                  }`}
+                >
+                  {produto.ativo ? 'Ativo' : 'Inativo'}
+                </button>
+              </div>
+              <h3 className="font-medium text-white mb-2">{produto.nome}</h3>
+              <p className="text-sm text-gray-400 mb-2">{produto.categoria}</p>
+              <div className="flex items-center justify-between mb-4">
+                <span className="text-lg font-bold text-green-400">R$ {produto.preco}</span>
+                <span className="text-sm text-gray-400">Estoque: {produto.estoque}</span>
+              </div>
+              <div className="flex space-x-2">
+                <button 
+                  onClick={() => handleEditProduct(produto)}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm"
+                >
+                  Editar
+                </button>
+                <button 
+                  onClick={() => handleDeleteProduct(produto.id)}
+                  className="bg-gray-700 hover:bg-gray-600 text-white p-2 rounded-lg"
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderWhatsApp = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-6">WhatsApp Business Center</h2>
+        
+        {/* Status da Conexão */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className={`p-3 rounded-xl ${
+                whatsappStatus === 'connected' ? 'bg-green-600/20' : 
+                whatsappStatus === 'connecting' ? 'bg-yellow-600/20' :
+                whatsappStatus === 'error' ? 'bg-red-600/20' : 'bg-gray-600/20'
+              }`}>
+                {whatsappStatus === 'connected' ? (
+                  <Wifi className="w-6 h-6 text-green-400" />
+                ) : whatsappStatus === 'connecting' ? (
+                  <RefreshCw className="w-6 h-6 text-yellow-400 animate-spin" />
+                ) : whatsappStatus === 'error' ? (
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
+                ) : (
+                  <WifiOff className="w-6 h-6 text-gray-400" />
+                )}
+              </div>
+              <div>
+                <h3 className="font-semibold text-white">
+                  {whatsappStatus === 'connected' ? 'WhatsApp Conectado' : 
+                   whatsappStatus === 'connecting' ? 'Conectando...' :
+                   whatsappStatus === 'error' ? 'Erro na Conexão' : 'WhatsApp Desconectado'}
+                </h3>
+                <p className="text-sm text-gray-400">
+                  {whatsappStatus === 'connected' ? `Conectado desde ${lastConnectionTime?.toLocaleString('pt-BR')}` : 
+                   whatsappStatus === 'connecting' ? 'Escaneie o QR Code com seu celular' :
+                   whatsappStatus === 'error' ? 'Falha ao conectar. Tente novamente.' : 'Conecte seu WhatsApp para enviar notificações'}
+                </p>
+                {connectionAttempts > 0 && (
+                  <p className="text-xs text-gray-500">Tentativas de conexão: {connectionAttempts}</p>
+                )}
+              </div>
+            </div>
+            <div className="flex space-x-2">
+              {whatsappConnected ? (
+                <button
+                  onClick={disconnectWhatsApp}
+                  className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+                >
+                  <Unlink className="w-4 h-4" />
+                  <span>Desconectar</span>
+                </button>
+              ) : (
+                <button
+                  onClick={connectWhatsApp}
+                  disabled={whatsappStatus === 'connecting'}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+                >
+                  <QrCode className="w-4 h-4" />
+                  <span>{whatsappStatus === 'connecting' ? 'Conectando...' : 'Conectar'}</span>
+                </button>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Configurações de Notificações */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
+          <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+            <Settings className="w-5 h-5" />
+            <span>Configurações de Notificações</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Confirmação automática</span>
+                <input 
+                  type="checkbox" 
+                  checked={whatsappSettings.autoConfirmation}
+                  onChange={(e) => setWhatsappSettings({...whatsappSettings, autoConfirmation: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Lembrete (horas antes)</label>
+                <select 
+                  value={whatsappSettings.reminderTime}
+                  onChange={(e) => setWhatsappSettings({...whatsappSettings, reminderTime: parseInt(e.target.value)})}
+                  className="w-full bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                >
+                  <option value={1}>1 hora</option>
+                  <option value={2}>2 horas</option>
+                  <option value={4}>4 horas</option>
+                  <option value={12}>12 horas</option>
+                  <option value={24}>24 horas</option>
+                </select>
+              </div>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Horário comercial</label>
+                <div className="flex space-x-2">
+                  <input
+                    type="time"
+                    value={whatsappSettings.businessHours.start}
+                    onChange={(e) => setWhatsappSettings({
+                      ...whatsappSettings,
+                      businessHours: {...whatsappSettings.businessHours, start: e.target.value}
+                    })}
+                    className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                  />
+                  <span className="text-gray-400 self-center">às</span>
+                  <input
+                    type="time"
+                    value={whatsappSettings.businessHours.end}
+                    onChange={(e) => setWhatsappSettings({
+                      ...whatsappSettings,
+                      businessHours: {...whatsappSettings.businessHours, end: e.target.value}
+                    })}
+                    className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Mensagens Personalizadas */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
+          <h3 className="font-semibold text-white mb-4">Mensagens Personalizadas</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Mensagem de Boas-vindas</label>
+              <textarea
+                value={whatsappSettings.welcomeMessage}
+                onChange={(e) => setWhatsappSettings({...whatsappSettings, welcomeMessage: e.target.value})}
+                rows={2}
+                className="w-full bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Mensagem de Lembrete</label>
+              <textarea
+                value={whatsappSettings.reminderMessage}
+                onChange={(e) => setWhatsappSettings({...whatsappSettings, reminderMessage: e.target.value})}
+                rows={2}
+                className="w-full bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">Use {'{horario}'} para inserir o horário automaticamente</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              alert('✅ Configurações de mensagens salvas!')
+              console.log('WhatsApp settings saved:', whatsappSettings)
+            }}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          >
+            Salvar Configurações
+          </button>
+        </div>
+
+        {/* Ações Rápidas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4">Ações Rápidas</h3>
+            <div className="space-y-3">
+              <button 
+                onClick={() => setShowCampaignModal(true)}
+                disabled={!whatsappConnected}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 rounded-lg flex items-center justify-center space-x-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>Nova Campanha</span>
+              </button>
+              <button 
+                onClick={() => {
+                  const todayAppointments = agendamentos.filter(ag => ag.data === new Date().toISOString().split('T')[0])
+                  todayAppointments.forEach(ag => sendReminder(ag))
+                  alert(`Lembretes enviados para ${todayAppointments.length} clientes!`)
+                }}
+                disabled={!whatsappConnected}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 rounded-lg flex items-center justify-center space-x-2"
+              >
+                <Clock3 className="w-4 h-4" />
+                <span>Enviar Lembretes</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4">Estatísticas</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Mensagens enviadas hoje:</span>
+                <span className="text-white font-medium">{messageLogs.filter(m => m.timestamp.includes(new Date().toLocaleDateString('pt-BR'))).length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Taxa de entrega:</span>
+                <span className="text-green-400 font-medium">98%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Taxa de leitura:</span>
+                <span className="text-blue-400 font-medium">85%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Log de Mensagens */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-white">Histórico de Mensagens</h3>
+            <div className="flex space-x-2">
+              <button className="text-gray-400 hover:text-white">
+                <Filter className="w-4 h-4" />
+              </button>
+              <button className="text-gray-400 hover:text-white">
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {messageLogs.map((log) => (
+              <div key={log.id} className="flex items-start justify-between p-3 bg-[#141416] rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="font-medium text-white">{log.cliente}</span>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      log.tipo === 'confirmacao' ? 'bg-green-600/20 text-green-400' :
+                      log.tipo === 'lembrete' ? 'bg-blue-600/20 text-blue-400' :
+                      log.tipo === 'campanha' ? 'bg-purple-600/20 text-purple-400' :
+                      'bg-gray-600/20 text-gray-400'
+                    }`}>
+                      {log.tipo}
+                    </span>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      log.status === 'enviado' ? 'bg-yellow-600/20 text-yellow-400' :
+                      log.status === 'entregue' ? 'bg-blue-600/20 text-blue-400' :
+                      log.status === 'lido' ? 'bg-green-600/20 text-green-400' :
+                      'bg-red-600/20 text-red-400'
+                    }`}>
+                      {log.status === 'enviado' ? <Send className="w-3 h-3" /> :
+                       log.status === 'entregue' ? <CheckCircle className="w-3 h-3" /> :
+                       log.status === 'lido' ? <CheckCheck className="w-3 h-3" /> :
+                       <XCircle className="w-3 h-3" />}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-300 mb-2">{log.mensagem}</p>
+                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                    <span>{log.timestamp}</span>
+                    <button 
+                      onClick={() => copyPhoneNumber(log.telefone)}
+                      className="flex items-center space-x-1 hover:text-gray-300"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>{log.telefone}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => sendManualMessage(log.cliente, log.telefone)}
+                    disabled={!whatsappConnected}
+                    className="text-green-400 hover:text-green-300 disabled:text-gray-600"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => window.open(`https://wa.me/${log.telefone.replace(/\D/g, '')}`)}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Modal QR Code */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Conectar WhatsApp</h3>
+              <button
+                onClick={() => {
+                  setShowQRModal(false)
+                  setWhatsappStatus('disconnected')
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="text-center">
+              {whatsappStatus === 'connecting' && (
+                <>
+                  <div className="bg-white p-4 rounded-xl mb-4 inline-block">
+                    {qrCode ? (
+                      <img src={qrCode} alt="QR Code WhatsApp" className="w-48 h-48" />
+                    ) : (
+                      <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-white">Como conectar:</h4>
+                    <div className="text-left space-y-2 text-sm text-gray-300">
+                      <div className="flex items-start space-x-2">
+                        <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
+                        <span>Abra o WhatsApp no seu celular</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
+                        <span>Toque em Menu (⋮) e depois em "WhatsApp Web"</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">3</span>
+                        <span>Escaneie este código QR</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={refreshQRCode}
+                      className="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Atualizar QR Code</span>
+                    </button>
+                  </div>
+                </>
+              )}
+              
+              {whatsappStatus === 'error' && (
+                <div className="text-center">
+                  <div className="bg-red-600/20 p-4 rounded-xl mb-4">
+                    <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
+                    <h4 className="font-semibold text-white mb-2">Erro na Conexão</h4>
+                    <p className="text-sm text-gray-300">
+                      Não foi possível conectar ao WhatsApp. Verifique sua conexão e tente novamente.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowQRModal(false)
+                      connectWhatsApp()
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+    </div>
+  )
+
+  const renderRelatorios = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Relatórios</h2>
+          <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2">
+            <Download className="w-4 h-4" />
+            <span>Exportar</span>
+          </button>
+        </div>
+
+        {/* Resumo Financeiro */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+          <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
+            <div className="flex items-center space-x-3">
+              <div className="bg-green-600/20 p-2 rounded-lg">
+                <DollarSign className="w-5 h-5 text-green-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Faturamento Mensal</p>
+                <p className="text-xl font-bold text-white">R$ {estatisticas.faturamentoMes}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
+            <div className="flex items-center space-x-3">
+              <div className="bg-blue-600/20 p-2 rounded-lg">
+                <Users className="w-5 h-5 text-blue-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Clientes Novos</p>
+                <p className="text-xl font-bold text-white">{estatisticas.clientesNovos}</p>
+              </div>
+            </div>
+          </div>
+          <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
+            <div className="flex items-center space-x-3">
+              <div className="bg-purple-600/20 p-2 rounded-lg">
+                <Scissors className="w-5 h-5 text-purple-400" />
+              </div>
+              <div>
+                <p className="text-sm text-gray-400">Serviço Mais Vendido</p>
+                <p className="text-lg font-bold text-white">{estatisticas.servicosMaisVendidos}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Gráficos */}
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4">Faturamento por Dia</h3>
+            <div className="h-48 flex items-end justify-between space-x-2">
+              {[120, 180, 90, 250, 200, 300, 280].map((value, index) => (
+                <div key={index} className="flex flex-col items-center">
+                  <div 
+                    className="bg-blue-600 w-8 rounded-t"
+                    style={{ height: `${(value / 300) * 100}%` }}
+                  ></div>
+                  <span className="text-xs text-gray-400 mt-2">
+                    {['Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb', 'Dom'][index]}
+                  </span>
+                </div>
+              ))}
+            </div>
+          </div>
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4">Serviços Mais Vendidos</h3>
+            <div className="space-y-4">
+              {[
+                { nome: 'Corte + Barba', vendas: 45, cor: 'bg-blue-600' },
+                { nome: 'Corte Simples', vendas: 32, cor: 'bg-green-600' },
+                { nome: 'Barba', vendas: 18, cor: 'bg-purple-600' },
+                { nome: 'Sobrancelha', vendas: 12, cor: 'bg-yellow-600' }
+              ].map((servico, index) => (
+                <div key={index} className="flex items-center justify-between">
+                  <div className="flex items-center space-x-3">
+                    <div className={`w-3 h-3 rounded-full ${servico.cor}`}></div>
+                    <span className="text-white">{servico.nome}</span>
+                  </div>
+                  <span className="text-gray-400">{servico.vendas}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderPersonalizacao = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-6">Personalização</h2>
+        
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          {/* Coluna Esquerda - Configurações */}
+          <div className="space-y-6">
+            {/* Logo da Barbearia */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+                <ImageIcon className="w-5 h-5" />
+                <span>Logo da Barbearia</span>
+              </h3>
+              <div className="space-y-4">
+                <div 
+                  className="border-2 border-dashed border-gray-600 rounded-xl p-8 text-center cursor-pointer hover:border-blue-600 transition-colors"
+                  onClick={() => document.getElementById('logo-upload').click()}
+                >
+                  {personalizacaoForm.logoPreview ? (
+                    <div className="space-y-2">
+                      <img 
+                        src={personalizacaoForm.logoPreview} 
+                        alt="Logo Preview" 
+                        className="w-20 h-20 object-contain mx-auto rounded-lg"
+                      />
+                      <p className="text-green-400 text-sm">Logo carregado com sucesso!</p>
+                      <p className="text-gray-500 text-xs">Clique para alterar</p>
+                    </div>
+                  ) : (
+                    <div>
+                      <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+                      <p className="text-gray-400 text-sm">Clique para fazer upload do logo</p>
+                      <p className="text-gray-500 text-xs mt-1">PNG, JPG até 2MB</p>
+                    </div>
+                  )}
+                </div>
+                <input
+                  id="logo-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleLogoUpload}
+                />
+              </div>
+            </div>
+
+            {/* Esquema de Cores */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+                <PaletteIcon className="w-5 h-5" />
+                <span>Esquema de Cores</span>
+              </h3>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Cor Primária</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={personalizacaoForm.corPrimaria}
+                      onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, corPrimaria: e.target.value})}
+                      className="w-12 h-10 rounded-lg border border-gray-600 bg-transparent cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={personalizacaoForm.corPrimaria}
+                      onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, corPrimaria: e.target.value})}
+                      className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Cor Secundária</label>
+                  <div className="flex items-center space-x-2">
+                    <input
+                      type="color"
+                      value={personalizacaoForm.corSecundaria}
+                      onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, corSecundaria: e.target.value})}
+                      className="w-12 h-10 rounded-lg border border-gray-600 bg-transparent cursor-pointer"
+                    />
+                    <input
+                      type="text"
+                      value={personalizacaoForm.corSecundaria}
+                      onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, corSecundaria: e.target.value})}
+                      className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm"
+                    />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Informações da Barbearia */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4">Informações da Barbearia</h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Nome da Barbearia</label>
+                  <input
+                    type="text"
+                    value={personalizacaoForm.nomeBarbearia}
+                    onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, nomeBarbearia: e.target.value})}
+                    className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Telefone</label>
+                  <input
+                    type="text"
+                    value={personalizacaoForm.telefone}
+                    onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, telefone: e.target.value})}
+                    className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Endereço</label>
+                  <input
+                    type="text"
+                    value={personalizacaoForm.endereco}
+                    onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, endereco: e.target.value})}
+                    className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+            </div>
+
+            {/* Link Público */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+                <Globe className="w-5 h-5" />
+                <span>Link Público</span>
+              </h3>
+              <div className="space-y-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">URL Personalizada</label>
+                  <div className="flex items-center space-x-2">
+                    <span className="text-gray-400 text-sm">{typeof window !== 'undefined' ? window.location.origin : ''}/cliente/</span>
+                    <input
+                      type="text"
+                      value={personalizacaoForm.linkPublico}
+                      onChange={(e) => setPersonalizacaoForm({...personalizacaoForm, linkPublico: e.target.value.toLowerCase().replace(/[^a-z0-9-]/g, '')})}
+                      className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white text-sm focus:outline-none focus:border-blue-600"
+                      placeholder="minha-barbearia"
+                    />
+                  </div>
+                  <p className="text-xs text-gray-500 mt-1">Apenas letras minúsculas, números e hífens</p>
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={generatePublicLink}
+                    className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm flex items-center justify-center space-x-2"
+                  >
+                    <Link className="w-4 h-4" />
+                    <span>Copiar Link</span>
+                  </button>
+                  <button 
+                    onClick={previewPage}
+                    className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg text-sm flex items-center justify-center space-x-2"
+                  >
+                    <Eye className="w-4 h-4" />
+                    <span>Preview</span>
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            {/* Horário de Funcionamento */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4">Horário de Funcionamento</h3>
+              <div className="space-y-3">
+                {Object.entries(personalizacaoForm.horarios).map(([dia, horario]) => (
+                  <div key={dia} className="flex items-center justify-between">
+                    <span className="text-white w-20 capitalize">{dia}</span>
+                    <div className="flex items-center space-x-2">
+                      <input
+                        type="time"
+                        value={horario.inicio}
+                        onChange={(e) => setPersonalizacaoForm({
+                          ...personalizacaoForm,
+                          horarios: {
+                            ...personalizacaoForm.horarios,
+                            [dia]: { ...horario, inicio: e.target.value }
+                          }
+                        })}
+                        className="bg-[#141416] border border-gray-800 rounded-lg px-3 py-1 text-white text-sm"
+                      />
+                      <span className="text-gray-400">às</span>
+                      <input
+                        type="time"
+                        value={horario.fim}
+                        onChange={(e) => setPersonalizacaoForm({
+                          ...personalizacaoForm,
+                          horarios: {
+                            ...personalizacaoForm.horarios,
+                            [dia]: { ...horario, fim: e.target.value }
+                          }
+                        })}
+                        className="bg-[#141416] border border-gray-800 rounded-lg px-3 py-1 text-white text-sm"
+                      />
+                      <label className="flex items-center space-x-2">
+                        <input 
+                          type="checkbox" 
+                          checked={horario.aberto}
+                          onChange={(e) => setPersonalizacaoForm({
+                            ...personalizacaoForm,
+                            horarios: {
+                              ...personalizacaoForm.horarios,
+                              [dia]: { ...horario, aberto: e.target.checked }
+                            }
+                          })}
+                          className="rounded" 
+                        />
+                        <span className="text-sm text-gray-400">Aberto</span>
+                      </label>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          </div>
+
+          {/* Coluna Direita - Ações e Preview */}
+          <div className="space-y-6">
+            {/* Ações */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4">Ações</h3>
+              <div className="space-y-3">
+                <button 
+                  onClick={handleSavePersonalizacao}
+                  className="w-full bg-green-600 hover:bg-green-700 text-white py-3 rounded-xl flex items-center justify-center space-x-2 transition-colors"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>Salvar Alterações</span>
+                </button>
+                <button 
+                  onClick={previewPage}
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl flex items-center justify-center space-x-2 transition-colors"
+                >
+                  <Eye className="w-4 h-4" />
+                  <span>Visualizar Página</span>
+                </button>
+                <button 
+                  onClick={generatePublicLink}
+                  className="w-full bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl flex items-center justify-center space-x-2 transition-colors"
+                >
+                  <Globe className="w-4 h-4" />
+                  <span>Copiar Link Público</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Status da Página */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4">Status da Página</h3>
+              <div className="space-y-3">
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Status</span>
+                  <span className="text-green-400 flex items-center space-x-1">
+                    <CheckCircle className="w-4 h-4" />
+                    <span>Ativa</span>
+                  </span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Link</span>
+                  <span className="text-blue-400">/{personalizacaoForm.linkPublico}</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-gray-400">Última atualização</span>
+                  <span className="text-gray-300">Hoje, 14:30</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Preview da Página */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4">Preview da Página</h3>
+              <div className="bg-[#141416] rounded-lg p-4 border border-gray-700">
+                <div className="flex items-center space-x-3 mb-3">
+                  {personalizacaoForm.logoPreview ? (
+                    <img 
+                      src={personalizacaoForm.logoPreview} 
+                      alt="Logo" 
+                      className="w-8 h-8 object-contain rounded"
+                    />
+                  ) : (
+                    <div className="w-8 h-8 bg-gray-600 rounded flex items-center justify-center">
+                      <Scissors className="w-4 h-4 text-gray-400" />
+                    </div>
+                  )}
+                  <div>
+                    <h4 className="text-white font-medium text-sm">{personalizacaoForm.nomeBarbearia}</h4>
+                    <p className="text-gray-400 text-xs">{personalizacaoForm.telefone}</p>
+                  </div>
+                </div>
+                <div 
+                  className="w-full h-2 rounded-full mb-2"
+                  style={{ backgroundColor: personalizacaoForm.corPrimaria }}
+                ></div>
+                <div className="text-xs text-gray-400">
+                  <p>📍 {personalizacaoForm.endereco}</p>
+                  <p className="mt-1">🕒 Seg-Sex: 08:00-18:00</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Dicas de Personalização */}
+            <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+              <h3 className="font-semibold text-white mb-4">Dicas de Personalização</h3>
+              <div className="space-y-3 text-sm text-gray-400">
+                <div className="flex items-start space-x-2">
+                  <div className="w-2 h-2 bg-blue-600 rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Use cores que representem sua marca e criem uma identidade visual forte.</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="w-2 h-2 bg-green-600 rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Mantenha as informações sempre atualizadas para melhor experiência do cliente.</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="w-2 h-2 bg-purple-600 rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Configure os horários de funcionamento corretamente para evitar agendamentos fora do horário.</p>
+                </div>
+                <div className="flex items-start space-x-2">
+                  <div className="w-2 h-2 bg-yellow-600 rounded-full mt-2 flex-shrink-0"></div>
+                  <p>Teste o link público regularmente para garantir que está funcionando corretamente.</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderSuporte = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <div className="flex items-center justify-between mb-6">
+          <h2 className="text-xl font-semibold text-white">Suporte</h2>
+          <button 
+            onClick={() => setShowTicketModal(true)}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+          >
+            <Plus className="w-4 h-4" />
+            <span>Novo Ticket</span>
+          </button>
+        </div>
+
+        {/* Tickets Recentes */}
+        <div className="space-y-4">
+          {tickets.map((ticket) => (
+            <div key={ticket.id} className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-medium text-white">{ticket.assunto}</h3>
+                <span className={`px-2 py-1 text-xs rounded-full ${
+                  ticket.status === 'pendente' 
+                    ? 'bg-yellow-600/20 text-yellow-400' 
+                    : ticket.status === 'resolvido'
+                    ? 'bg-green-600/20 text-green-400'
+                    : 'bg-blue-600/20 text-blue-400'
+                }`}>
+                  {ticket.status === 'pendente' ? 'Pendente' : 
+                   ticket.status === 'resolvido' ? 'Resolvido' : 'Em Andamento'}
+                </span>
+              </div>
+              <p className="text-sm text-gray-400 mb-2">{ticket.descricao}</p>
+              <p className="text-xs text-gray-500">Criado em {ticket.data}</p>
+              {ticket.resposta && (
+                <div className="mt-3 p-3 bg-[#141416] rounded-lg border-l-4 border-green-600">
+                  <p className="text-sm text-green-400 font-medium mb-1">Resposta do Suporte:</p>
+                  <p className="text-sm text-gray-300">{ticket.resposta}</p>
+                </div>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+
+  // Novas seções para perfil, configurações e plano
+  const renderPerfil = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-6">Meu Perfil</h2>
+        
+        <div className="flex items-center space-x-6 mb-8">
+          <div className="w-20 h-20 bg-gray-600 rounded-full flex items-center justify-center">
+            <User className="w-10 h-10 text-gray-300" />
+          </div>
+          <div>
+            <h3 className="text-xl font-semibold text-white">{barbeiro.nome}</h3>
+            <p className="text-gray-400">{barbeiro.email}</p>
+            <p className="text-sm text-gray-500">{barbeiro.barbearia}</p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Nome Completo</label>
+              <input
+                type="text"
+                value={perfilForm.nome}
+                onChange={(e) => setPerfilForm({...perfilForm, nome: e.target.value})}
+                className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Email</label>
+              <input
+                type="email"
+                value={perfilForm.email}
+                onChange={(e) => setPerfilForm({...perfilForm, email: e.target.value})}
+                className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Telefone</label>
+              <input
+                type="tel"
+                value={perfilForm.telefone}
+                onChange={(e) => setPerfilForm({...perfilForm, telefone: e.target.value})}
+                className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+              />
+            </div>
+          </div>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Senha Atual</label>
+              <input
+                type="password"
+                value={perfilForm.senhaAtual}
+                onChange={(e) => setPerfilForm({...perfilForm, senhaAtual: e.target.value})}
+                placeholder="Digite sua senha atual"
+                className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Nova Senha</label>
+              <input
+                type="password"
+                value={perfilForm.novaSenha}
+                onChange={(e) => setPerfilForm({...perfilForm, novaSenha: e.target.value})}
+                placeholder="Digite a nova senha"
+                className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Confirmar Nova Senha</label>
+              <input
+                type="password"
+                value={perfilForm.confirmarSenha}
+                onChange={(e) => setPerfilForm({...perfilForm, confirmarSenha: e.target.value})}
+                placeholder="Confirme a nova senha"
+                className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+              />
+            </div>
+          </div>
+        </div>
+
+        <div className="flex justify-end mt-6">
+          <button 
+            onClick={handleSavePerfil}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl transition-colors"
+          >
+            Salvar Alterações
+          </button>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderConfiguracoes = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-6">Configurações</h2>
+        
+        <div className="space-y-6">
+          {/* Notificações */}
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+              <Bell className="w-5 h-5" />
+              <span>Notificações</span>
+            </h3>
+            <div className="space-y-4">
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Notificações por email</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.notificacaoEmail}
+                  onChange={(e) => setConfigForm({...configForm, notificacaoEmail: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Notificações push</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.notificacaoPush}
+                  onChange={(e) => setConfigForm({...configForm, notificacaoPush: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Lembrete de agendamentos</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.lembreteAgendamento}
+                  onChange={(e) => setConfigForm({...configForm, lembreteAgendamento: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Relatórios semanais</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.relatorioSemanal}
+                  onChange={(e) => setConfigForm({...configForm, relatorioSemanal: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Privacidade */}
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+              <Shield className="w-5 h-5" />
+              <span>Privacidade</span>
+            </h3>
+            <div className="space-y-4">
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Perfil público</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.perfilPublico}
+                  onChange={(e) => setConfigForm({...configForm, perfilPublico: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Mostrar estatísticas</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.mostrarEstatisticas}
+                  onChange={(e) => setConfigForm({...configForm, mostrarEstatisticas: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Permitir avaliações</span>
+                <input 
+                  type="checkbox" 
+                  checked={configForm.permitirAvaliacoes}
+                  onChange={(e) => setConfigForm({...configForm, permitirAvaliacoes: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
+            </div>
+          </div>
+
+          {/* Backup */}
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+              <Download className="w-5 h-5" />
+              <span>Backup e Dados</span>
+            </h3>
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300">Backup automático</p>
+                  <p className="text-sm text-gray-500">Último backup: hoje às 03:00</p>
+                </div>
+                <button className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm">
+                  Fazer Backup
+                </button>
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-gray-300">Exportar dados</p>
+                  <p className="text-sm text-gray-500">Baixar todos os seus dados</p>
+                </div>
+                <button className="bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg text-sm">
+                  Exportar
+                </button>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex justify-end">
+            <button 
+              onClick={handleSaveConfiguracoes}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-xl transition-colors"
+            >
+              Salvar Configurações
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
+  const renderPlano = () => (
+    <div className="space-y-6">
+      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
+        <h2 className="text-xl font-semibold text-white mb-6">Gerenciar Plano</h2>
+        
+        {/* Plano Atual */}
+        <div className="bg-gradient-to-r from-yellow-600/20 to-yellow-500/20 rounded-xl p-6 border border-yellow-600/30 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <div className="bg-yellow-600/20 p-3 rounded-xl">
+                <Crown className="w-8 h-8 text-yellow-400" />
+              </div>
+              <div>
+                <h3 className="text-xl font-semibold text-white">Plano {barbeiro.plano}</h3>
+                <p className="text-yellow-400">Expira em {barbeiro.diasRestantes} dias</p>
+                <p className="text-sm text-gray-400">Renovação automática ativa</p>
+              </div>
+            </div>
+            <div className="text-right">
+              <p className="text-2xl font-bold text-white">R$ 49,90</p>
+              <p className="text-sm text-gray-400">por mês</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Recursos do Plano Atual */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
+          <h3 className="font-semibold text-white mb-4">Recursos Inclusos</h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <span className="text-gray-300">Agendamentos ilimitados</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <span className="text-gray-300">WhatsApp integrado</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <span className="text-gray-300">Relatórios avançados</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <span className="text-gray-300">Suporte prioritário</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <span className="text-gray-300">Personalização completa</span>
+            </div>
+            <div className="flex items-center space-x-3">
+              <CheckCircle className="w-5 h-5 text-green-400" />
+              <span className="text-gray-300">Backup automático</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Outros Planos */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+          {/* Plano Básico */}
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Básico</h3>
+              <p className="text-2xl font-bold text-white mt-2">R$ 19,90</p>
+              <p className="text-sm text-gray-400">por mês</p>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Até 50 agendamentos/mês</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Relatórios básicos</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <XCircle className="w-4 h-4 text-red-400" />
+                <span className="text-sm text-gray-400">WhatsApp integrado</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => alert('Funcionalidade de downgrade será implementada em breve!')}
+              className="w-full bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-lg text-sm"
+            >
+              Downgrade
+            </button>
+          </div>
+
+          {/* Plano Premium (Atual) */}
+          <div className="bg-gradient-to-b from-yellow-600/20 to-yellow-500/10 rounded-xl p-6 border-2 border-yellow-600/50 relative">
+            <div className="absolute -top-3 left-1/2 transform -translate-x-1/2">
+              <span className="bg-yellow-600 text-black px-3 py-1 rounded-full text-xs font-semibold">
+                PLANO ATUAL
+              </span>
+            </div>
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Premium</h3>
+              <p className="text-2xl font-bold text-white mt-2">R$ 49,90</p>
+              <p className="text-sm text-gray-400">por mês</p>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Agendamentos ilimitados</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">WhatsApp integrado</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Relatórios avançados</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => alert('Plano renovado com sucesso!')}
+              className="w-full bg-yellow-600 hover:bg-yellow-700 text-black py-2 rounded-lg text-sm font-semibold"
+            >
+              Renovar Agora
+            </button>
+          </div>
+
+          {/* Plano Pro */}
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <div className="text-center mb-4">
+              <h3 className="text-lg font-semibold text-white">Pro</h3>
+              <p className="text-2xl font-bold text-white mt-2">R$ 99,90</p>
+              <p className="text-sm text-gray-400">por mês</p>
+            </div>
+            <div className="space-y-3 mb-6">
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Tudo do Premium +</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">Múltiplas barbearias</span>
+              </div>
+              <div className="flex items-center space-x-2">
+                <CheckCircle className="w-4 h-4 text-green-400" />
+                <span className="text-sm text-gray-300">API personalizada</span>
+              </div>
+            </div>
+            <button 
+              onClick={() => alert('Funcionalidade de upgrade será implementada em breve!')}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-lg text-sm"
+            >
+              Upgrade
+            </button>
+          </div>
+        </div>
+
+        {/* Histórico de Pagamentos */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mt-6">
+          <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+            <History className="w-5 h-5" />
+            <span>Histórico de Pagamentos</span>
+          </h3>
+          <div className="space-y-3">
+            <div className="flex items-center justify-between p-3 bg-[#141416] rounded-lg">
+              <div>
+                <p className="text-white font-medium">Plano Premium - Janeiro 2024</p>
+                <p className="text-sm text-gray-400">15/01/2024</p>
+              </div>
+              <div className="text-right">
+                <p className="text-green-400 font-medium">R$ 49,90</p>
+                <span className="text-xs text-green-400">Pago</span>
+              </div>
+            </div>
+            <div className="flex items-center justify-between p-3 bg-[#141416] rounded-lg">
+              <div>
+                <p className="text-white font-medium">Plano Premium - Dezembro 2023</p>
+                <p className="text-sm text-gray-400">15/12/2023</p>
+              </div>
+              <div className="text-right">
+                <p className="text-green-400 font-medium">R$ 49,90</p>
+                <span className="text-xs text-green-400">Pago</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  )
+
   const renderContent = () => {
     switch (activeSection) {
       case 'dashboard':
         return renderDashboard()
+      case 'agenda':
+        return renderAgenda()
+      case 'servicos':
+        return renderServicos()
+      case 'clientes':
+        return renderClientes()
+      case 'loja':
+        return renderLoja()
+      case 'whatsapp':
+        return renderWhatsApp()
+      case 'relatorios':
+        return renderRelatorios()
+      case 'personalizacao':
+        return renderPersonalizacao()
+      case 'suporte':
+        return renderSuporte()
+      case 'perfil':
+        return renderPerfil()
+      case 'configuracoes':
+        return renderConfiguracoes()
+      case 'plano':
+        return renderPlano()
       default:
         return renderDashboard()
     }
@@ -1398,13 +3160,13 @@ export default function PainelBarbeiro() {
         </div>
       )}
 
-      {/* Modal Calendário com horários de 15 em 15 minutos e legendas coloridas */}
+      {/* Modal Calendário */}
       {showCalendar && selectedBarber && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#1a1a2e] rounded-2xl p-6 w-full max-w-6xl border border-gray-700">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-2xl border border-gray-800">
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-2xl font-semibold text-white">Escolha o Horário</h3>
+                <h3 className="text-xl font-semibold text-white">Escolha o Horário</h3>
                 <p className="text-blue-400 font-medium">Barbeiro: {selectedBarber.nome}</p>
                 {selectedDateForBooking && (
                   <p className="text-blue-400 font-medium">Data: {new Date(selectedDateForBooking).toLocaleDateString('pt-BR')}</p>
@@ -1421,95 +3183,76 @@ export default function PainelBarbeiro() {
               </button>
             </div>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
               {/* Calendário */}
-              <div className="bg-[#0f0f23] rounded-xl p-6 border border-gray-700">
-                <div className="flex items-center justify-between mb-6">
+              <div>
+                <div className="flex items-center justify-between mb-4">
                   <button 
                     onClick={previousMonth}
                     className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <ChevronLeft className="w-6 h-6 text-white" />
+                    <ChevronLeft className="w-5 h-5 text-white" />
                   </button>
-                  <h4 className="text-xl font-semibold text-white">
+                  <h4 className="font-semibold text-white">
                     {getMonthName(currentMonth)} {currentYear}
                   </h4>
                   <button 
                     onClick={nextMonth}
                     className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
                   >
-                    <ChevronRight className="w-6 h-6 text-white" />
+                    <ChevronRight className="w-5 h-5 text-white" />
                   </button>
                 </div>
-                
-                <div className="grid grid-cols-7 gap-2 mb-4">
-                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                    <div key={day} className="text-center text-gray-400 text-sm p-3 font-medium">{day}</div>
-                  ))}
-                </div>
-                
-                <div className="grid grid-cols-7 gap-2">
-                  {generateCalendar().map((day, index) => (
-                    <button
-                      key={index}
-                      onClick={() => day && selectDate(day.date)}
-                      disabled={!day || !day.available}
-                      className={`p-3 text-sm rounded-lg transition-all duration-200 font-medium ${
-                        day && day.available
-                          ? selectedDateForBooking === day.date
-                            ? 'bg-blue-500 text-white shadow-lg scale-105'
-                            : 'bg-gray-700 text-white hover:bg-gray-600 hover:scale-105'
-                          : day && day.isPast
-                          ? 'text-gray-600 cursor-not-allowed'
-                          : day
-                          ? 'text-gray-500 cursor-not-allowed'
-                          : ''
-                      }`}
-                    >
-                      {day ? day.day : ''}
-                    </button>
-                  ))}
+                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
+                  <div className="grid grid-cols-7 gap-2 mb-4">
+                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                      <div key={day} className="text-center text-gray-400 text-sm p-2">{day}</div>
+                    ))}
+                  </div>
+                  <div className="grid grid-cols-7 gap-2">
+                    {generateCalendar().map((day, index) => (
+                      <button
+                        key={index}
+                        onClick={() => day && selectDate(day.date)}
+                        disabled={!day || !day.available}
+                        className={`p-2 text-sm rounded-lg transition-colors ${
+                          day && day.available
+                            ? selectedDateForBooking === day.date
+                              ? 'bg-blue-600 text-white'
+                              : 'bg-gray-700 text-white hover:bg-gray-600'
+                            : day && day.isPast
+                            ? 'text-gray-600 cursor-not-allowed'
+                            : day
+                            ? 'text-gray-500 cursor-not-allowed'
+                            : ''
+                        }`}
+                      >
+                        {day ? day.day : ''}
+                      </button>
+                    ))}
+                  </div>
                 </div>
               </div>
 
-              {/* Horários de 15 em 15 minutos com legendas coloridas */}
-              <div className="bg-[#0f0f23] rounded-xl p-6 border border-gray-700">
-                <div className="flex items-center justify-between mb-4">
-                  <h4 className="text-xl font-semibold text-white">
-                    {selectedDateForBooking ? 'Horários Disponíveis' : 'Selecione uma data'}
-                  </h4>
-                </div>
-                
-                {/* Legendas coloridas */}
-                <div className="flex flex-wrap gap-4 mb-6 p-4 bg-[#1a1a2e] rounded-lg border border-gray-700">
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-green-500 rounded"></div>
-                    <span className="text-sm text-gray-300">Disponível</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-red-500 rounded"></div>
-                    <span className="text-sm text-gray-300">Ocupado</span>
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <div className="w-4 h-4 bg-blue-500 rounded"></div>
-                    <span className="text-sm text-gray-300">Selecionado</span>
-                  </div>
-                </div>
-                
-                <div className="max-h-96 overflow-y-auto">
+              {/* Horários */}
+              <div>
+                <h4 className="font-semibold text-white mb-4">
+                  {selectedDateForBooking ? 'Horários Disponíveis' : 'Selecione uma data primeiro'}
+                </h4>
+                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
                   {selectedDateForBooking ? (
-                    <div className="grid grid-cols-4 gap-3">
+                    <div className="grid grid-cols-3 gap-2">
                       {availableHours.map((hour, index) => (
                         <button
                           key={index}
                           onClick={() => selectHour(hour)}
                           disabled={!hour.available}
-                          className={`p-3 text-sm rounded-lg transition-all duration-200 font-medium ${
+                          className={`p-2 text-sm rounded-lg transition-colors ${
                             hour.available
                               ? selectedHour === hour.time
-                                ? 'bg-blue-500 text-white shadow-lg scale-105'
-                                : 'bg-green-500 text-white hover:bg-green-400 hover:scale-105'
-                              : 'bg-red-500/80 text-red-200 cursor-not-allowed'
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-700 text-white hover:bg-gray-600'
+                              : 'bg-red-900/20 text-red-400 cursor-not-allowed'
                           }`}
                         >
                           {hour.time}
@@ -1517,10 +3260,7 @@ export default function PainelBarbeiro() {
                       ))}
                     </div>
                   ) : (
-                    <div className="text-center py-12">
-                      <Calendar className="w-16 h-16 text-gray-500 mx-auto mb-4" />
-                      <p className="text-gray-400 text-lg">Selecione uma data para ver os horários disponíveis</p>
-                    </div>
+                    <p className="text-gray-400 text-center py-8">Selecione uma data para ver os horários disponíveis</p>
                   )}
                 </div>
               </div>
@@ -1595,6 +3335,28 @@ export default function PainelBarbeiro() {
                   ))}
                 </select>
               </div>
+              {!appointmentForm.barbeiro && (
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Data</label>
+                    <input
+                      type="date"
+                      value={appointmentForm.data}
+                      onChange={(e) => setAppointmentForm({...appointmentForm, data: e.target.value})}
+                      className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Horário</label>
+                    <input
+                      type="time"
+                      value={appointmentForm.horario}
+                      onChange={(e) => setAppointmentForm({...appointmentForm, horario: e.target.value})}
+                      className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm text-gray-400 mb-2">Valor</label>
                 <input
@@ -1620,6 +3382,468 @@ export default function PainelBarbeiro() {
                   className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
                 >
                   {editingAppointment ? 'Atualizar' : 'Agendar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo/Editar Cliente */}
+      {showNewClientModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                {editingClient ? 'Editar Cliente' : 'Novo Cliente'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowNewClientModal(false)
+                  setEditingClient(null)
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Nome</label>
+                <input
+                  type="text"
+                  placeholder="Nome completo"
+                  value={clientForm.nome}
+                  onChange={(e) => setClientForm({...clientForm, nome: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Telefone</label>
+                <input
+                  type="tel"
+                  placeholder="(11) 99999-9999"
+                  value={clientForm.telefone}
+                  onChange={(e) => setClientForm({...clientForm, telefone: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Email (opcional)</label>
+                <input
+                  type="email"
+                  placeholder="cliente@email.com"
+                  value={clientForm.email}
+                  onChange={(e) => setClientForm({...clientForm, email: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowNewClientModal(false)
+                    setEditingClient(null)
+                  }}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveClient}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
+                >
+                  {editingClient ? 'Atualizar' : 'Cadastrar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo/Editar Serviço */}
+      {showNewServiceModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                {editingService ? 'Editar Serviço' : 'Novo Serviço'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowNewServiceModal(false)
+                  setEditingService(null)
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Nome do Serviço</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Corte Masculino"
+                  value={serviceForm.nome}
+                  onChange={(e) => setServiceForm({...serviceForm, nome: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Preço (R$)</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={serviceForm.preco}
+                    onChange={(e) => setServiceForm({...serviceForm, preco: parseFloat(e.target.value) || 0})}
+                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Duração (min)</label>
+                  <input
+                    type="number"
+                    placeholder="30"
+                    value={serviceForm.duracao}
+                    onChange={(e) => setServiceForm({...serviceForm, duracao: parseInt(e.target.value) || 0})}
+                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={serviceForm.ativo}
+                    onChange={(e) => setServiceForm({...serviceForm, ativo: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm text-gray-400">Serviço ativo</span>
+                </label>
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowNewServiceModal(false)
+                    setEditingService(null)
+                  }}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveService}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
+                >
+                  {editingService ? 'Atualizar' : 'Criar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Novo/Editar Produto */}
+      {showNewProductModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">
+                {editingProduct ? 'Editar Produto' : 'Novo Produto'}
+              </h3>
+              <button
+                onClick={() => {
+                  setShowNewProductModal(false)
+                  setEditingProduct(null)
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Nome do Produto</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Pomada Modeladora"
+                  value={productForm.nome}
+                  onChange={(e) => setProductForm({...productForm, nome: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Categoria</label>
+                <select
+                  value={productForm.categoria}
+                  onChange={(e) => setProductForm({...productForm, categoria: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                >
+                  <option value="">Selecione uma categoria</option>
+                  <option value="Cabelo">Cabelo</option>
+                  <option value="Barba">Barba</option>
+                  <option value="Cuidados">Cuidados</option>
+                  <option value="Acessórios">Acessórios</option>
+                </select>
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Preço (R$)</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={productForm.preco}
+                    onChange={(e) => setProductForm({...productForm, preco: parseFloat(e.target.value) || 0})}
+                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Estoque</label>
+                  <input
+                    type="number"
+                    placeholder="0"
+                    value={productForm.estoque}
+                    onChange={(e) => setProductForm({...productForm, estoque: parseInt(e.target.value) || 0})}
+                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="flex items-center space-x-2">
+                  <input
+                    type="checkbox"
+                    checked={productForm.ativo}
+                    onChange={(e) => setProductForm({...productForm, ativo: e.target.checked})}
+                    className="rounded"
+                  />
+                  <span className="text-sm text-gray-400">Produto ativo</span>
+                </label>
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => {
+                    setShowNewProductModal(false)
+                    setEditingProduct(null)
+                  }}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSaveProduct}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
+                >
+                  {editingProduct ? 'Atualizar' : 'Criar'}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Bloquear Horário */}
+      {showBlockTimeModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Bloquear Horário</h3>
+              <button
+                onClick={() => setShowBlockTimeModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Motivo</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Almoço, Reunião, etc."
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Data</label>
+                  <input
+                    type="date"
+                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+                <div>
+                  <label className="block text-sm text-gray-400 mb-2">Horário Início</label>
+                  <input
+                    type="time"
+                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Horário Fim</label>
+                <input
+                  type="time"
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowBlockTimeModal(false)}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowBlockTimeModal(false)
+                    alert('Horário bloqueado com sucesso!')
+                  }}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white py-2 rounded-xl transition-colors"
+                >
+                  Bloquear
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Campanha */}
+      {showCampaignModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Nova Campanha</h3>
+              <button
+                onClick={() => setShowCampaignModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Título da Campanha</label>
+                <input
+                  type="text"
+                  placeholder="Ex: Promoção de Janeiro"
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Mensagem</label>
+                <textarea
+                  placeholder="Digite sua mensagem aqui..."
+                  rows={4}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600 resize-none"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Público Alvo</label>
+                <select className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600">
+                  <option>Todos os clientes</option>
+                  <option>Clientes ativos</option>
+                  <option>Clientes inativos</option>
+                  <option>Clientes VIP</option>
+                </select>
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowCampaignModal(false)}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={() => {
+                    setShowCampaignModal(false)
+                    if (whatsappConnected) {
+                      const newCampaign = {
+                        id: Date.now(),
+                        cliente: 'Campanha em Massa',
+                        telefone: 'Múltiplos contatos',
+                        tipo: 'campanha',
+                        mensagem: 'Nova campanha enviada para todos os clientes selecionados',
+                        status: 'enviado',
+                        timestamp: new Date().toLocaleString('pt-BR'),
+                        agendamentoId: null
+                      }
+                      setMessageLogs(prev => [newCampaign, ...prev])
+                      alert('Campanha enviada com sucesso!')
+                    } else {
+                      alert('Conecte o WhatsApp primeiro para enviar campanhas!')
+                    }
+                  }}
+                  className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl transition-colors"
+                >
+                  Enviar
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Ticket */}
+      {showTicketModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Novo Ticket de Suporte</h3>
+              <button
+                onClick={() => setShowTicketModal(false)}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <div className="space-y-4">
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Assunto</label>
+                <input
+                  type="text"
+                  placeholder="Descreva brevemente o problema"
+                  value={ticketForm.assunto}
+                  onChange={(e) => setTicketForm({...ticketForm, assunto: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                />
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Categoria</label>
+                <select 
+                  value={ticketForm.categoria}
+                  onChange={(e) => setTicketForm({...ticketForm, categoria: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                >
+                  <option value="Problema Técnico">Problema Técnico</option>
+                  <option value="Dúvida">Dúvida</option>
+                  <option value="Sugestão">Sugestão</option>
+                  <option value="Reclamação">Reclamação</option>
+                </select>
+              </div>
+              <div>
+                <label className="block text-sm text-gray-400 mb-2">Descrição</label>
+                <textarea
+                  placeholder="Descreva detalhadamente o problema ou dúvida..."
+                  rows={4}
+                  value={ticketForm.descricao}
+                  onChange={(e) => setTicketForm({...ticketForm, descricao: e.target.value})}
+                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600 resize-none"
+                />
+              </div>
+              <div className="flex space-x-3 pt-4">
+                <button
+                  onClick={() => setShowTicketModal(false)}
+                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handleSendTicket}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
+                >
+                  Enviar
                 </button>
               </div>
             </div>
