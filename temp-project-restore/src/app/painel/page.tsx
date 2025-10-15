@@ -64,7 +64,13 @@ import {
   Shield,
   CreditCard,
   History,
-  UserPlus
+  QrCode,
+  Smartphone,
+  RefreshCw,
+  Copy,
+  CheckCheck,
+  Clock3,
+  AlertTriangle
 } from 'lucide-react'
 
 export default function PainelBarbeiro() {
@@ -74,6 +80,11 @@ export default function PainelBarbeiro() {
   const [showProfileMenu, setShowProfileMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [whatsappConnected, setWhatsappConnected] = useState(false)
+  const [whatsappStatus, setWhatsappStatus] = useState('disconnected') // disconnected, connecting, connected, error
+  const [qrCode, setQrCode] = useState('')
+  const [showQRModal, setShowQRModal] = useState(false)
+  const [connectionAttempts, setConnectionAttempts] = useState(0)
+  const [lastConnectionTime, setLastConnectionTime] = useState(null)
   const [selectedDate, setSelectedDate] = useState(new Date())
   const [showNewAppointmentModal, setShowNewAppointmentModal] = useState(false)
   const [showNewClientModal, setShowNewClientModal] = useState(false)
@@ -82,12 +93,56 @@ export default function PainelBarbeiro() {
   const [showTicketModal, setShowTicketModal] = useState(false)
   const [showNewServiceModal, setShowNewServiceModal] = useState(false)
   const [showNewProductModal, setShowNewProductModal] = useState(false)
-  const [showNewTeamMemberModal, setShowNewTeamMemberModal] = useState(false)
   const [editingAppointment, setEditingAppointment] = useState(null)
   const [editingClient, setEditingClient] = useState(null)
   const [editingService, setEditingService] = useState(null)
   const [editingProduct, setEditingProduct] = useState(null)
-  const [editingTeamMember, setEditingTeamMember] = useState(null)
+
+  // Estados para WhatsApp
+  const [whatsappSettings, setWhatsappSettings] = useState({
+    autoConfirmation: true,
+    reminderTime: 24, // horas antes
+    welcomeMessage: 'Olá! Obrigado por agendar conosco. Seu horário foi confirmado!',
+    reminderMessage: 'Olá! Lembramos que você tem um agendamento amanhã às {horario}. Confirme sua presença!',
+    cancelationMessage: 'Seu agendamento foi cancelado. Entre em contato para reagendar.',
+    businessHours: {
+      start: '08:00',
+      end: '18:00'
+    }
+  })
+
+  const [messageLogs, setMessageLogs] = useState([
+    {
+      id: 1,
+      cliente: 'Carlos Silva',
+      telefone: '(11) 98888-8888',
+      tipo: 'confirmacao',
+      mensagem: 'Olá Carlos! Seu agendamento para hoje às 14:00 foi confirmado.',
+      status: 'enviado',
+      timestamp: '2024-01-20 13:30',
+      agendamentoId: 1
+    },
+    {
+      id: 2,
+      cliente: 'Pedro Santos',
+      telefone: '(11) 97777-7777',
+      tipo: 'lembrete',
+      mensagem: 'Olá Pedro! Lembramos que você tem um agendamento amanhã às 10:30.',
+      status: 'entregue',
+      timestamp: '2024-01-19 18:00',
+      agendamentoId: 2
+    },
+    {
+      id: 3,
+      cliente: 'Lucas Oliveira',
+      telefone: '(11) 96666-6666',
+      tipo: 'campanha',
+      mensagem: 'Promoção especial: Corte + Barba por apenas R$ 50! Válido até sexta.',
+      status: 'lido',
+      timestamp: '2024-01-18 10:15',
+      agendamentoId: null
+    }
+  ])
 
   // Estados para o novo sistema de agendamento
   const [selectedBarber, setSelectedBarber] = useState(null)
@@ -98,6 +153,13 @@ export default function PainelBarbeiro() {
   const [selectedHour, setSelectedHour] = useState(null)
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
   const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
+
+  // Estados para agenda - calendário interativo
+  const [agendaCurrentMonth, setAgendaCurrentMonth] = useState(new Date().getMonth())
+  const [agendaCurrentYear, setAgendaCurrentYear] = useState(new Date().getFullYear())
+  const [selectedAgendaDate, setSelectedAgendaDate] = useState(new Date().toISOString().split('T')[0])
+  const [selectedBarbeirFilter, setSelectedBarbeirFilter] = useState('todos')
+  const [agendaView, setAgendaView] = useState('calendario') // calendario, lista
 
   // Estados para perfil, configurações e plano
   const [perfilForm, setPerfilForm] = useState({
@@ -181,24 +243,6 @@ export default function PainelBarbeiro() {
     ativo: true
   })
 
-  // Estados para equipe
-  const [teamMemberForm, setTeamMemberForm] = useState({
-    nome: '',
-    especialidade: '',
-    telefone: '',
-    email: '',
-    salario: 100,
-    comissao: 10,
-    ativo: true
-  })
-
-  const [equipe, setEquipe] = useState([
-    { id: 1, nome: "João Silva", especialidade: "Corte Clássico", telefone: "(11) 99999-9999", email: "joao@barbearia.com", salario: 100, comissao: 15, ativo: true },
-    { id: 2, nome: "Pedro Santos", especialidade: "Barba & Bigode", telefone: "(11) 98888-8888", email: "pedro@barbearia.com", salario: 100, comissao: 12, ativo: true },
-    { id: 3, nome: "Carlos Oliveira", especialidade: "Corte Moderno", telefone: "(11) 97777-7777", email: "carlos@barbearia.com", salario: 100, comissao: 10, ativo: true },
-    { id: 4, nome: "Rafael Costa", especialidade: "Degradê", telefone: "(11) 96666-6666", email: "rafael@barbearia.com", salario: 100, comissao: 8, ativo: false }
-  ])
-
   // Estados para personalização expandida
   const [personalizacaoForm, setPersonalizacaoForm] = useState({
     nomeBarbearia: barbeiro.barbearia,
@@ -258,7 +302,11 @@ export default function PainelBarbeiro() {
     { id: 1, cliente: "Carlos Silva", servico: "Corte + Barba", horario: "09:00", status: "confirmado", telefone: "(11) 98888-8888", valor: 60, data: "2024-01-20", barbeiro: "João Silva" },
     { id: 2, cliente: "Pedro Santos", servico: "Corte Simples", horario: "10:30", status: "confirmado", telefone: "(11) 97777-7777", valor: 35, data: "2024-01-20", barbeiro: "Pedro Santos" },
     { id: 3, cliente: "Lucas Oliveira", servico: "Barba", horario: "14:00", status: "pendente", telefone: "(11) 96666-6666", valor: 25, data: "2024-01-20", barbeiro: "Carlos Oliveira" },
-    { id: 4, cliente: "Rafael Costa", servico: "Corte + Barba", horario: "15:30", status: "confirmado", telefone: "(11) 95555-5555", valor: 60, data: "2024-01-20", barbeiro: "João Silva" }
+    { id: 4, cliente: "Rafael Costa", servico: "Corte + Barba", horario: "15:30", status: "confirmado", telefone: "(11) 95555-5555", valor: 60, data: "2024-01-20", barbeiro: "João Silva" },
+    { id: 5, cliente: "Ana Maria", servico: "Corte Feminino", horario: "11:00", status: "confirmado", telefone: "(11) 94444-4444", valor: 45, data: "2024-01-21", barbeiro: "Pedro Santos" },
+    { id: 6, cliente: "José Santos", servico: "Barba", horario: "16:00", status: "pendente", telefone: "(11) 93333-3333", valor: 25, data: "2024-01-21", barbeiro: "Carlos Oliveira" },
+    { id: 7, cliente: "Maria Silva", servico: "Corte + Barba", horario: "09:30", status: "confirmado", telefone: "(11) 92222-2222", valor: 60, data: "2024-01-22", barbeiro: "João Silva" },
+    { id: 8, cliente: "Paulo Oliveira", servico: "Corte Simples", horario: "13:00", status: "confirmado", telefone: "(11) 91111-1111", valor: 35, data: "2024-01-22", barbeiro: "Pedro Santos" }
   ])
 
   const [clientes, setClientes] = useState([
@@ -288,7 +336,6 @@ export default function PainelBarbeiro() {
     { id: 'agenda', label: 'Agenda', icon: CalendarDays },
     { id: 'servicos', label: 'Serviços', icon: Scissors },
     { id: 'clientes', label: 'Clientes', icon: UserCheck },
-    { id: 'equipe', label: 'Equipe', icon: Users },
     { id: 'loja', label: 'Loja', icon: Store },
     { id: 'whatsapp', label: 'WhatsApp', icon: MessageSquare },
     { id: 'relatorios', label: 'Relatórios', icon: BarChart3 },
@@ -307,6 +354,105 @@ export default function PainelBarbeiro() {
       confirmarSenha: ''
     })
   }, [])
+
+  // Simular geração de QR Code
+  const generateQRCode = () => {
+    const qrData = `whatsapp-web-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
+    setQrCode(`data:image/svg+xml;base64,${btoa(`
+      <svg width="200" height="200" xmlns="http://www.w3.org/2000/svg">
+        <rect width="200" height="200" fill="white"/>
+        <g fill="black">
+          ${Array.from({length: 20}, (_, i) => 
+            Array.from({length: 20}, (_, j) => 
+              Math.random() > 0.5 ? `<rect x="${j*10}" y="${i*10}" width="10" height="10"/>` : ''
+            ).join('')
+          ).join('')}
+        </g>
+        <text x="100" y="190" text-anchor="middle" font-size="8" fill="gray">QR Code WhatsApp</text>
+      </svg>
+    `)}`)
+    return qrData
+  }
+
+  // Função para conectar WhatsApp
+  const connectWhatsApp = () => {
+    setWhatsappStatus('connecting')
+    setConnectionAttempts(prev => prev + 1)
+    setShowQRModal(true)
+    generateQRCode()
+    
+    // Simular processo de conexão
+    setTimeout(() => {
+      const success = Math.random() > 0.3 // 70% chance de sucesso
+      if (success) {
+        setWhatsappStatus('connected')
+        setWhatsappConnected(true)
+        setLastConnectionTime(new Date())
+        setShowQRModal(false)
+        alert('✅ WhatsApp conectado com sucesso! Agora você pode enviar notificações automáticas.')
+      } else {
+        setWhatsappStatus('error')
+        setTimeout(() => {
+          setWhatsappStatus('disconnected')
+          setShowQRModal(false)
+        }, 3000)
+      }
+    }, 5000)
+  }
+
+  const disconnectWhatsApp = () => {
+    setWhatsappConnected(false)
+    setWhatsappStatus('disconnected')
+    setQrCode('')
+    setLastConnectionTime(null)
+    alert('WhatsApp desconectado!')
+  }
+
+  // Função para recarregar QR Code
+  const refreshQRCode = () => {
+    if (whatsappStatus === 'connecting') {
+      generateQRCode()
+    }
+  }
+
+  // Função para copiar número de telefone
+  const copyPhoneNumber = (phone) => {
+    navigator.clipboard.writeText(phone.replace(/\D/g, ''))
+    alert('Número copiado para a área de transferência!')
+  }
+
+  // Função para enviar mensagem manual
+  const sendManualMessage = (cliente, telefone, tipo = 'manual') => {
+    const newMessage = {
+      id: Date.now(),
+      cliente,
+      telefone,
+      tipo,
+      mensagem: `Mensagem enviada manualmente para ${cliente}`,
+      status: 'enviado',
+      timestamp: new Date().toLocaleString('pt-BR'),
+      agendamentoId: null
+    }
+    setMessageLogs(prev => [newMessage, ...prev])
+    alert(`Mensagem enviada para ${cliente}!`)
+  }
+
+  // Função para enviar lembrete automático
+  const sendReminder = (agendamento) => {
+    const message = whatsappSettings.reminderMessage.replace('{horario}', agendamento.horario)
+    const newMessage = {
+      id: Date.now(),
+      cliente: agendamento.cliente,
+      telefone: agendamento.telefone,
+      tipo: 'lembrete',
+      mensagem: message,
+      status: 'enviado',
+      timestamp: new Date().toLocaleString('pt-BR'),
+      agendamentoId: agendamento.id
+    }
+    setMessageLogs(prev => [newMessage, ...prev])
+    alert(`Lembrete enviado para ${agendamento.cliente}!`)
+  }
 
   // Função para gerar horários disponíveis
   const generateAvailableHours = (date, barberId) => {
@@ -398,6 +544,69 @@ export default function PainelBarbeiro() {
     }
   }
 
+  // Funções para navegação do calendário da agenda
+  const agendaPreviousMonth = () => {
+    if (agendaCurrentMonth === 0) {
+      setAgendaCurrentMonth(11)
+      setAgendaCurrentYear(agendaCurrentYear - 1)
+    } else {
+      setAgendaCurrentMonth(agendaCurrentMonth - 1)
+    }
+  }
+
+  const agendaNextMonth = () => {
+    if (agendaCurrentMonth === 11) {
+      setAgendaCurrentMonth(0)
+      setAgendaCurrentYear(agendaCurrentYear + 1)
+    } else {
+      setAgendaCurrentMonth(agendaCurrentMonth + 1)
+    }
+  }
+
+  // Função para gerar calendário da agenda
+  const generateAgendaCalendar = () => {
+    const firstDay = new Date(agendaCurrentYear, agendaCurrentMonth, 1)
+    const lastDay = new Date(agendaCurrentYear, agendaCurrentMonth + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+    
+    const days = []
+    
+    // Dias vazios do início do mês
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null)
+    }
+    
+    // Dias do mês
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = `${agendaCurrentYear}-${(agendaCurrentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
+      const dayAgendamentos = agendamentos.filter(ag => ag.data === date)
+      const isToday = date === new Date().toISOString().split('T')[0]
+      const isSelected = date === selectedAgendaDate
+      
+      days.push({
+        day,
+        date,
+        agendamentos: dayAgendamentos,
+        isToday,
+        isSelected
+      })
+    }
+    
+    return days
+  }
+
+  // Função para obter agendamentos filtrados
+  const getFilteredAgendamentos = () => {
+    let filtered = agendamentos.filter(ag => ag.data === selectedAgendaDate)
+    
+    if (selectedBarbeirFilter !== 'todos') {
+      filtered = filtered.filter(ag => ag.barbeiro === selectedBarbeirFilter)
+    }
+    
+    return filtered.sort((a, b) => a.horario.localeCompare(b.horario))
+  }
+
   const acoesRapidas = [
     { 
       label: 'Novo Agendamento', 
@@ -452,6 +661,22 @@ export default function PainelBarbeiro() {
         status: 'confirmado'
       }
       setAgendamentos(prev => [...prev, newAppointment])
+      
+      // Enviar confirmação automática se WhatsApp estiver conectado
+      if (whatsappConnected && whatsappSettings.autoConfirmation) {
+        const confirmationMessage = {
+          id: Date.now() + 1,
+          cliente: appointmentForm.cliente,
+          telefone: appointmentForm.telefone,
+          tipo: 'confirmacao',
+          mensagem: whatsappSettings.welcomeMessage,
+          status: 'enviado',
+          timestamp: new Date().toLocaleString('pt-BR'),
+          agendamentoId: newAppointment.id
+        }
+        setMessageLogs(prev => [confirmationMessage, ...prev])
+      }
+      
       alert('Agendamento criado com sucesso!')
     }
 
@@ -644,65 +869,6 @@ export default function PainelBarbeiro() {
     ))
   }
 
-  // Funções para gerenciar equipe
-  const handleSaveTeamMember = () => {
-    if (!teamMemberForm.nome || !teamMemberForm.especialidade || !teamMemberForm.telefone) {
-      alert('Por favor, preencha todos os campos obrigatórios.')
-      return
-    }
-
-    if (editingTeamMember) {
-      // Editar membro existente
-      setEquipe(prev => prev.map(membro => 
-        membro.id === editingTeamMember.id 
-          ? { ...membro, ...teamMemberForm, id: editingTeamMember.id }
-          : membro
-      ))
-      alert('Membro da equipe atualizado com sucesso!')
-    } else {
-      // Criar novo membro
-      const newTeamMember = {
-        id: Date.now(),
-        ...teamMemberForm
-      }
-      setEquipe(prev => [...prev, newTeamMember])
-      alert('Membro da equipe adicionado com sucesso!')
-    }
-
-    setShowNewTeamMemberModal(false)
-    setEditingTeamMember(null)
-    setTeamMemberForm({ nome: '', especialidade: '', telefone: '', email: '', salario: 100, comissao: 10, ativo: true })
-  }
-
-  const handleEditTeamMember = (membro) => {
-    setEditingTeamMember(membro)
-    setTeamMemberForm({
-      nome: membro.nome,
-      especialidade: membro.especialidade,
-      telefone: membro.telefone,
-      email: membro.email || '',
-      salario: membro.salario,
-      comissao: membro.comissao,
-      ativo: membro.ativo
-    })
-    setShowNewTeamMemberModal(true)
-  }
-
-  const handleDeleteTeamMember = (id) => {
-    if (confirm('Tem certeza que deseja excluir este membro da equipe?')) {
-      setEquipe(prev => prev.filter(membro => membro.id !== id))
-      alert('Membro da equipe excluído com sucesso!')
-    }
-  }
-
-  const handleToggleTeamMemberStatus = (id) => {
-    setEquipe(prev => prev.map(membro => 
-      membro.id === id 
-        ? { ...membro, ativo: !membro.ativo }
-        : membro
-    ))
-  }
-
   // Função para upload de logo
   const handleLogoUpload = (event) => {
     const file = event.target.files[0]
@@ -768,16 +934,6 @@ export default function PainelBarbeiro() {
 
   const handleVisaoCliente = () => {
     window.open('/cliente', '_blank')
-  }
-
-  const connectWhatsApp = () => {
-    setWhatsappConnected(true)
-    alert('WhatsApp conectado com sucesso!')
-  }
-
-  const disconnectWhatsApp = () => {
-    setWhatsappConnected(false)
-    alert('WhatsApp desconectado!')
   }
 
   // Função para gerar calendário com navegação
@@ -985,7 +1141,44 @@ export default function PainelBarbeiro() {
       <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
         <div className="flex items-center justify-between mb-6">
           <h2 className="text-xl font-semibold text-white">Agenda Completa</h2>
-          <div className="flex space-x-2">
+          <div className="flex items-center space-x-4">
+            {/* Filtro de Barbeiro */}
+            <select
+              value={selectedBarbeirFilter}
+              onChange={(e) => setSelectedBarbeirFilter(e.target.value)}
+              className="bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+            >
+              <option value="todos">Todos os Barbeiros</option>
+              {barbeiros.filter(b => b.ativo).map(barbeiro => (
+                <option key={barbeiro.id} value={barbeiro.nome}>{barbeiro.nome}</option>
+              ))}
+            </select>
+
+            {/* Toggle de Visualização */}
+            <div className="flex bg-[#0C0C0D] rounded-xl border border-gray-800 p-1">
+              <button
+                onClick={() => setAgendaView('calendario')}
+                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                  agendaView === 'calendario' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                <Calendar className="w-4 h-4 mr-2 inline" />
+                Calendário
+              </button>
+              <button
+                onClick={() => setAgendaView('lista')}
+                className={`px-4 py-2 rounded-lg text-sm transition-colors ${
+                  agendaView === 'lista' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-400 hover:text-white'
+                }`}
+              >
+                Lista
+              </button>
+            </div>
+
             <button 
               onClick={startNewAppointment}
               className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
@@ -996,61 +1189,258 @@ export default function PainelBarbeiro() {
           </div>
         </div>
 
-        {/* Calendário Simples */}
-        <div className="grid grid-cols-7 gap-2 mb-6">
-          {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-            <div key={day} className="text-center text-gray-400 text-sm p-2">{day}</div>
-          ))}
-          {Array.from({length: 35}, (_, i) => (
-            <button
-              key={i}
-              className={`p-2 text-sm rounded-lg transition-colors ${
-                i === 15 ? 'bg-blue-600 text-white' : 'bg-[#0C0C0D] text-gray-400 hover:bg-gray-700'
-              }`}
-            >
-              {i + 1 <= 31 ? i + 1 : ''}
-            </button>
-          ))}
-        </div>
+        {agendaView === 'calendario' ? (
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Calendário */}
+            <div className="lg:col-span-2">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                {/* Navegação do Calendário */}
+                <div className="flex items-center justify-between mb-6">
+                  <button 
+                    onClick={agendaPreviousMonth}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-white" />
+                  </button>
+                  <h3 className="text-xl font-semibold text-white">
+                    {getMonthName(agendaCurrentMonth)} {agendaCurrentYear}
+                  </h3>
+                  <button 
+                    onClick={agendaNextMonth}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-white" />
+                  </button>
+                </div>
 
-        {/* Lista de Agendamentos */}
-        <div className="space-y-4">
-          <h3 className="text-lg font-semibold text-white">Agendamentos de Hoje</h3>
-          {agendamentos.map((agendamento) => (
-            <div key={agendamento.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
-              <div className="flex items-center space-x-4">
-                <div className="bg-gray-700 w-10 h-10 rounded-full flex items-center justify-center">
-                  <User className="w-5 h-5 text-gray-300" />
+                {/* Dias da Semana */}
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                    <div key={day} className="text-center text-gray-400 text-sm p-2 font-medium">{day}</div>
+                  ))}
                 </div>
-                <div>
-                  <p className="font-medium text-white">{agendamento.cliente}</p>
-                  <p className="text-sm text-gray-400">{agendamento.servico} • {agendamento.telefone}</p>
-                  <p className="text-xs text-gray-500">Barbeiro: {agendamento.barbeiro}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="font-medium text-white">{agendamento.horario}</p>
-                  <p className="text-sm text-green-400">R$ {agendamento.valor}</p>
-                </div>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleEditAppointment(agendamento)}
-                    className="text-blue-400 hover:text-blue-300"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteAppointment(agendamento.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
+
+                {/* Calendário */}
+                <div className="grid grid-cols-7 gap-2">
+                  {generateAgendaCalendar().map((day, index) => (
+                    <button
+                      key={index}
+                      onClick={() => day && setSelectedAgendaDate(day.date)}
+                      className={`relative p-3 text-sm rounded-lg transition-all duration-200 min-h-[60px] ${
+                        day 
+                          ? day.isSelected
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : day.isToday
+                            ? 'bg-blue-600/20 text-blue-400 border border-blue-600/50'
+                            : day.agendamentos.length > 0
+                            ? 'bg-green-600/20 text-white hover:bg-green-600/30'
+                            : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+                          : ''
+                      }`}
+                    >
+                      {day && (
+                        <>
+                          <span className="block font-medium">{day.day}</span>
+                          {day.agendamentos.length > 0 && (
+                            <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2">
+                              <div className="flex space-x-1">
+                                {day.agendamentos.slice(0, 3).map((_, i) => (
+                                  <div key={i} className="w-1.5 h-1.5 bg-current rounded-full opacity-70"></div>
+                                ))}
+                                {day.agendamentos.length > 3 && (
+                                  <span className="text-xs">+{day.agendamentos.length - 3}</span>
+                                )}
+                              </div>
+                            </div>
+                          )}
+                        </>
+                      )}
+                    </button>
+                  ))}
                 </div>
               </div>
             </div>
-          ))}
-        </div>
+
+            {/* Agendamentos do Dia Selecionado */}
+            <div className="space-y-4">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                <h3 className="text-lg font-semibold text-white mb-4">
+                  {new Date(selectedAgendaDate).toLocaleDateString('pt-BR', { 
+                    weekday: 'long', 
+                    day: 'numeric', 
+                    month: 'long' 
+                  })}
+                </h3>
+                
+                <div className="space-y-3 max-h-96 overflow-y-auto">
+                  {getFilteredAgendamentos().length > 0 ? (
+                    getFilteredAgendamentos().map((agendamento) => (
+                      <div key={agendamento.id} className="p-4 bg-[#141416] rounded-xl border border-gray-800">
+                        <div className="flex items-center justify-between mb-2">
+                          <div className="flex items-center space-x-2">
+                            <Clock className="w-4 h-4 text-blue-400" />
+                            <span className="font-medium text-white">{agendamento.horario}</span>
+                          </div>
+                          <span className={`px-2 py-1 text-xs rounded-full ${
+                            agendamento.status === 'confirmado' 
+                              ? 'bg-green-600/20 text-green-400' 
+                              : 'bg-yellow-600/20 text-yellow-400'
+                          }`}>
+                            {agendamento.status}
+                          </span>
+                        </div>
+                        <p className="font-medium text-white">{agendamento.cliente}</p>
+                        <p className="text-sm text-gray-400">{agendamento.servico}</p>
+                        <p className="text-xs text-gray-500 mb-2">Barbeiro: {agendamento.barbeiro}</p>
+                        <div className="flex items-center justify-between">
+                          <span className="text-green-400 font-medium">R$ {agendamento.valor}</span>
+                          <div className="flex space-x-2">
+                            <button 
+                              onClick={() => handleEditAppointment(agendamento)}
+                              className="text-blue-400 hover:text-blue-300"
+                            >
+                              <Edit className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => window.open(`https://wa.me/${agendamento.telefone.replace(/\D/g, '')}`)}
+                              className="text-green-400 hover:text-green-300"
+                            >
+                              <Phone className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => handleDeleteAppointment(agendamento.id)}
+                              className="text-red-400 hover:text-red-300"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ))
+                  ) : (
+                    <div className="text-center py-8">
+                      <Calendar className="w-12 h-12 text-gray-600 mx-auto mb-4" />
+                      <p className="text-gray-400">Nenhum agendamento para este dia</p>
+                      <button 
+                        onClick={startNewAppointment}
+                        className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm"
+                      >
+                        Criar Agendamento
+                      </button>
+                    </div>
+                  )}
+                </div>
+              </div>
+
+              {/* Resumo do Dia */}
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                <h4 className="font-semibold text-white mb-4">Resumo do Dia</h4>
+                <div className="space-y-3">
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Total de agendamentos:</span>
+                    <span className="text-white font-medium">{getFilteredAgendamentos().length}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Faturamento previsto:</span>
+                    <span className="text-green-400 font-medium">
+                      R$ {getFilteredAgendamentos().reduce((total, ag) => total + ag.valor, 0)}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Confirmados:</span>
+                    <span className="text-green-400 font-medium">
+                      {getFilteredAgendamentos().filter(ag => ag.status === 'confirmado').length}
+                    </span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-400">Pendentes:</span>
+                    <span className="text-yellow-400 font-medium">
+                      {getFilteredAgendamentos().filter(ag => ag.status === 'pendente').length}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        ) : (
+          // Visualização em Lista
+          <div className="space-y-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-4">
+                <input
+                  type="date"
+                  value={selectedAgendaDate}
+                  onChange={(e) => setSelectedAgendaDate(e.target.value)}
+                  className="bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
+                />
+                <div className="relative">
+                  <Search className="w-4 h-4 absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" />
+                  <input
+                    type="text"
+                    placeholder="Buscar cliente..."
+                    className="bg-[#0C0C0D] border border-gray-800 rounded-xl pl-10 pr-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center space-x-2">
+                <button className="text-gray-400 hover:text-white p-2">
+                  <Filter className="w-4 h-4" />
+                </button>
+                <button className="text-gray-400 hover:text-white p-2">
+                  <Download className="w-4 h-4" />
+                </button>
+              </div>
+            </div>
+
+            {getFilteredAgendamentos().map((agendamento) => (
+              <div key={agendamento.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
+                <div className="flex items-center space-x-4">
+                  <div className="bg-gray-700 w-12 h-12 rounded-full flex items-center justify-center">
+                    <User className="w-6 h-6 text-gray-300" />
+                  </div>
+                  <div>
+                    <p className="font-medium text-white">{agendamento.cliente}</p>
+                    <p className="text-sm text-gray-400">{agendamento.servico} • {agendamento.telefone}</p>
+                    <p className="text-xs text-gray-500">Barbeiro: {agendamento.barbeiro}</p>
+                  </div>
+                </div>
+                <div className="flex items-center space-x-6">
+                  <div className="text-center">
+                    <p className="font-medium text-white">{agendamento.horario}</p>
+                    <p className="text-sm text-green-400">R$ {agendamento.valor}</p>
+                  </div>
+                  <span className={`px-3 py-1 text-xs rounded-full ${
+                    agendamento.status === 'confirmado' 
+                      ? 'bg-green-600/20 text-green-400' 
+                      : 'bg-yellow-600/20 text-yellow-400'
+                  }`}>
+                    {agendamento.status}
+                  </span>
+                  <div className="flex space-x-2">
+                    <button 
+                      onClick={() => handleEditAppointment(agendamento)}
+                      className="text-blue-400 hover:text-blue-300"
+                    >
+                      <Edit className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => window.open(`https://wa.me/${agendamento.telefone.replace(/\D/g, '')}`)}
+                      className="text-green-400 hover:text-green-300"
+                    >
+                      <Phone className="w-4 h-4" />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteAppointment(agendamento.id)}
+                      className="text-red-400 hover:text-red-300"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   )
@@ -1191,78 +1581,6 @@ export default function PainelBarbeiro() {
     </div>
   )
 
-  const renderEquipe = () => (
-    <div className="space-y-6">
-      <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="text-xl font-semibold text-white">Gerenciar Equipe</h2>
-          <button 
-            onClick={() => {
-              setEditingTeamMember(null)
-              setTeamMemberForm({ nome: '', especialidade: '', telefone: '', email: '', salario: 100, comissao: 10, ativo: true })
-              setShowNewTeamMemberModal(true)
-            }}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
-          >
-            <UserPlus className="w-4 h-4" />
-            <span>Novo Membro</span>
-          </button>
-        </div>
-
-        <div className="space-y-4">
-          {equipe.map((membro) => (
-            <div key={membro.id} className="flex items-center justify-between p-4 bg-[#0C0C0D] rounded-xl border border-gray-800">
-              <div className="flex items-center space-x-4">
-                <div className="bg-blue-600/20 p-3 rounded-xl">
-                  <User className="w-5 h-5 text-blue-400" />
-                </div>
-                <div>
-                  <p className="font-medium text-white">{membro.nome}</p>
-                  <p className="text-sm text-gray-400">{membro.especialidade}</p>
-                  <p className="text-xs text-gray-500">{membro.telefone}</p>
-                </div>
-              </div>
-              <div className="flex items-center space-x-4">
-                <div className="text-right">
-                  <p className="text-sm text-green-400">R$ {membro.salario}</p>
-                  <p className="text-xs text-gray-400">{membro.comissao}% comissão</p>
-                </div>
-                <button
-                  onClick={() => handleToggleTeamMemberStatus(membro.id)}
-                  className={`px-3 py-1 rounded-full text-xs cursor-pointer transition-colors ${
-                    membro.ativo ? 'bg-green-600/20 text-green-400 hover:bg-green-600/30' : 'bg-red-600/20 text-red-400 hover:bg-red-600/30'
-                  }`}
-                >
-                  {membro.ativo ? 'Ativo' : 'Inativo'}
-                </button>
-                <div className="flex space-x-2">
-                  <button 
-                    onClick={() => handleEditTeamMember(membro)}
-                    className="text-blue-400 hover:text-blue-300"
-                  >
-                    <Edit className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => window.open(`https://wa.me/${membro.telefone.replace(/\D/g, '')}`)}
-                    className="text-green-400 hover:text-green-300"
-                  >
-                    <Phone className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteTeamMember(membro.id)}
-                    className="text-red-400 hover:text-red-300"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )
-
   const renderLoja = () => (
     <div className="space-y-6">
       <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
@@ -1327,26 +1645,41 @@ export default function PainelBarbeiro() {
   const renderWhatsApp = () => (
     <div className="space-y-6">
       <div className="bg-[#141416] rounded-2xl p-6 border border-gray-800">
-        <h2 className="text-xl font-semibold text-white mb-6">WhatsApp Center</h2>
+        <h2 className="text-xl font-semibold text-white mb-6">WhatsApp Business Center</h2>
         
         {/* Status da Conexão */}
         <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-4">
-              <div className={`p-3 rounded-xl ${whatsappConnected ? 'bg-green-600/20' : 'bg-red-600/20'}`}>
-                {whatsappConnected ? (
+              <div className={`p-3 rounded-xl ${
+                whatsappStatus === 'connected' ? 'bg-green-600/20' : 
+                whatsappStatus === 'connecting' ? 'bg-yellow-600/20' :
+                whatsappStatus === 'error' ? 'bg-red-600/20' : 'bg-gray-600/20'
+              }`}>
+                {whatsappStatus === 'connected' ? (
                   <Wifi className="w-6 h-6 text-green-400" />
+                ) : whatsappStatus === 'connecting' ? (
+                  <RefreshCw className="w-6 h-6 text-yellow-400 animate-spin" />
+                ) : whatsappStatus === 'error' ? (
+                  <AlertTriangle className="w-6 h-6 text-red-400" />
                 ) : (
-                  <WifiOff className="w-6 h-6 text-red-400" />
+                  <WifiOff className="w-6 h-6 text-gray-400" />
                 )}
               </div>
               <div>
                 <h3 className="font-semibold text-white">
-                  {whatsappConnected ? 'WhatsApp Conectado' : 'WhatsApp Desconectado'}
+                  {whatsappStatus === 'connected' ? 'WhatsApp Conectado' : 
+                   whatsappStatus === 'connecting' ? 'Conectando...' :
+                   whatsappStatus === 'error' ? 'Erro na Conexão' : 'WhatsApp Desconectado'}
                 </h3>
                 <p className="text-sm text-gray-400">
-                  {whatsappConnected ? 'Pronto para enviar mensagens' : 'Conecte seu WhatsApp para começar'}
+                  {whatsappStatus === 'connected' ? `Conectado desde ${lastConnectionTime?.toLocaleString('pt-BR')}` : 
+                   whatsappStatus === 'connecting' ? 'Escaneie o QR Code com seu celular' :
+                   whatsappStatus === 'error' ? 'Falha ao conectar. Tente novamente.' : 'Conecte seu WhatsApp para enviar notificações'}
                 </p>
+                {connectionAttempts > 0 && (
+                  <p className="text-xs text-gray-500">Tentativas de conexão: {connectionAttempts}</p>
+                )}
               </div>
             </div>
             <div className="flex space-x-2">
@@ -1361,46 +1694,312 @@ export default function PainelBarbeiro() {
               ) : (
                 <button
                   onClick={connectWhatsApp}
-                  className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
+                  disabled={whatsappStatus === 'connecting'}
+                  className="bg-green-600 hover:bg-green-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white px-4 py-2 rounded-xl flex items-center space-x-2"
                 >
-                  <Link className="w-4 h-4" />
-                  <span>Conectar</span>
+                  <QrCode className="w-4 h-4" />
+                  <span>{whatsappStatus === 'connecting' ? 'Conectando...' : 'Conectar'}</span>
                 </button>
               )}
             </div>
           </div>
         </div>
 
-        {/* Campanhas */}
-        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
-          <div className="flex items-center justify-between mb-4">
-            <h3 className="font-semibold text-white">Campanhas</h3>
-            <button 
-              onClick={() => setShowCampaignModal(true)}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-xl flex items-center space-x-2"
-            >
-              <Send className="w-4 h-4" />
-              <span>Nova Campanha</span>
-            </button>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center justify-between p-3 bg-[#141416] rounded-lg">
+        {/* Configurações de Notificações */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
+          <h3 className="font-semibold text-white mb-4 flex items-center space-x-2">
+            <Settings className="w-5 h-5" />
+            <span>Configurações de Notificações</span>
+          </h3>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="space-y-4">
+              <label className="flex items-center justify-between">
+                <span className="text-gray-300">Confirmação automática</span>
+                <input 
+                  type="checkbox" 
+                  checked={whatsappSettings.autoConfirmation}
+                  onChange={(e) => setWhatsappSettings({...whatsappSettings, autoConfirmation: e.target.checked})}
+                  className="rounded" 
+                />
+              </label>
               <div>
-                <p className="text-white font-medium">Lembrete de Agendamento</p>
-                <p className="text-sm text-gray-400">Enviado para 25 clientes</p>
+                <label className="block text-sm text-gray-400 mb-2">Lembrete (horas antes)</label>
+                <select 
+                  value={whatsappSettings.reminderTime}
+                  onChange={(e) => setWhatsappSettings({...whatsappSettings, reminderTime: parseInt(e.target.value)})}
+                  className="w-full bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                >
+                  <option value={1}>1 hora</option>
+                  <option value={2}>2 horas</option>
+                  <option value={4}>4 horas</option>
+                  <option value={12}>12 horas</option>
+                  <option value={24}>24 horas</option>
+                </select>
               </div>
-              <span className="text-xs text-green-400">Enviado</span>
             </div>
-            <div className="flex items-center justify-between p-3 bg-[#141416] rounded-lg">
+            <div className="space-y-4">
               <div>
-                <p className="text-white font-medium">Promoção Corte + Barba</p>
-                <p className="text-sm text-gray-400">Enviado para 50 clientes</p>
+                <label className="block text-sm text-gray-400 mb-2">Horário comercial</label>
+                <div className="flex space-x-2">
+                  <input
+                    type="time"
+                    value={whatsappSettings.businessHours.start}
+                    onChange={(e) => setWhatsappSettings({
+                      ...whatsappSettings,
+                      businessHours: {...whatsappSettings.businessHours, start: e.target.value}
+                    })}
+                    className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                  />
+                  <span className="text-gray-400 self-center">às</span>
+                  <input
+                    type="time"
+                    value={whatsappSettings.businessHours.end}
+                    onChange={(e) => setWhatsappSettings({
+                      ...whatsappSettings,
+                      businessHours: {...whatsappSettings.businessHours, end: e.target.value}
+                    })}
+                    className="flex-1 bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white"
+                  />
+                </div>
               </div>
-              <span className="text-xs text-blue-400">Agendado</span>
             </div>
           </div>
         </div>
+
+        {/* Mensagens Personalizadas */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800 mb-6">
+          <h3 className="font-semibold text-white mb-4">Mensagens Personalizadas</h3>
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Mensagem de Boas-vindas</label>
+              <textarea
+                value={whatsappSettings.welcomeMessage}
+                onChange={(e) => setWhatsappSettings({...whatsappSettings, welcomeMessage: e.target.value})}
+                rows={2}
+                className="w-full bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white resize-none"
+              />
+            </div>
+            <div>
+              <label className="block text-sm text-gray-400 mb-2">Mensagem de Lembrete</label>
+              <textarea
+                value={whatsappSettings.reminderMessage}
+                onChange={(e) => setWhatsappSettings({...whatsappSettings, reminderMessage: e.target.value})}
+                rows={2}
+                className="w-full bg-[#141416] border border-gray-800 rounded-lg px-3 py-2 text-white resize-none"
+              />
+              <p className="text-xs text-gray-500 mt-1">Use {'{horario}'} para inserir o horário automaticamente</p>
+            </div>
+          </div>
+          <button 
+            onClick={() => {
+              alert('✅ Configurações de mensagens salvas!')
+              console.log('WhatsApp settings saved:', whatsappSettings)
+            }}
+            className="mt-4 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg"
+          >
+            Salvar Configurações
+          </button>
+        </div>
+
+        {/* Ações Rápidas */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4">Ações Rápidas</h3>
+            <div className="space-y-3">
+              <button 
+                onClick={() => setShowCampaignModal(true)}
+                disabled={!whatsappConnected}
+                className="w-full bg-purple-600 hover:bg-purple-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 rounded-lg flex items-center justify-center space-x-2"
+              >
+                <Send className="w-4 h-4" />
+                <span>Nova Campanha</span>
+              </button>
+              <button 
+                onClick={() => {
+                  const todayAppointments = agendamentos.filter(ag => ag.data === new Date().toISOString().split('T')[0])
+                  todayAppointments.forEach(ag => sendReminder(ag))
+                  alert(`Lembretes enviados para ${todayAppointments.length} clientes!`)
+                }}
+                disabled={!whatsappConnected}
+                className="w-full bg-blue-600 hover:bg-blue-700 disabled:bg-gray-600 disabled:cursor-not-allowed text-white py-2 rounded-lg flex items-center justify-center space-x-2"
+              >
+                <Clock3 className="w-4 h-4" />
+                <span>Enviar Lembretes</span>
+              </button>
+            </div>
+          </div>
+
+          <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+            <h3 className="font-semibold text-white mb-4">Estatísticas</h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-400">Mensagens enviadas hoje:</span>
+                <span className="text-white font-medium">{messageLogs.filter(m => m.timestamp.includes(new Date().toLocaleDateString('pt-BR'))).length}</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Taxa de entrega:</span>
+                <span className="text-green-400 font-medium">98%</span>
+              </div>
+              <div className="flex justify-between">
+                <span className="text-gray-400">Taxa de leitura:</span>
+                <span className="text-blue-400 font-medium">85%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        {/* Log de Mensagens */}
+        <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+          <div className="flex items-center justify-between mb-4">
+            <h3 className="font-semibold text-white">Histórico de Mensagens</h3>
+            <div className="flex space-x-2">
+              <button className="text-gray-400 hover:text-white">
+                <Filter className="w-4 h-4" />
+              </button>
+              <button className="text-gray-400 hover:text-white">
+                <Download className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {messageLogs.map((log) => (
+              <div key={log.id} className="flex items-start justify-between p-3 bg-[#141416] rounded-lg">
+                <div className="flex-1">
+                  <div className="flex items-center space-x-2 mb-1">
+                    <span className="font-medium text-white">{log.cliente}</span>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      log.tipo === 'confirmacao' ? 'bg-green-600/20 text-green-400' :
+                      log.tipo === 'lembrete' ? 'bg-blue-600/20 text-blue-400' :
+                      log.tipo === 'campanha' ? 'bg-purple-600/20 text-purple-400' :
+                      'bg-gray-600/20 text-gray-400'
+                    }`}>
+                      {log.tipo}
+                    </span>
+                    <span className={`px-2 py-1 text-xs rounded-full ${
+                      log.status === 'enviado' ? 'bg-yellow-600/20 text-yellow-400' :
+                      log.status === 'entregue' ? 'bg-blue-600/20 text-blue-400' :
+                      log.status === 'lido' ? 'bg-green-600/20 text-green-400' :
+                      'bg-red-600/20 text-red-400'
+                    }`}>
+                      {log.status === 'enviado' ? <Send className="w-3 h-3" /> :
+                       log.status === 'entregue' ? <CheckCircle className="w-3 h-3" /> :
+                       log.status === 'lido' ? <CheckCheck className="w-3 h-3" /> :
+                       <XCircle className="w-3 h-3" />}
+                    </span>
+                  </div>
+                  <p className="text-sm text-gray-300 mb-2">{log.mensagem}</p>
+                  <div className="flex items-center space-x-4 text-xs text-gray-500">
+                    <span>{log.timestamp}</span>
+                    <button 
+                      onClick={() => copyPhoneNumber(log.telefone)}
+                      className="flex items-center space-x-1 hover:text-gray-300"
+                    >
+                      <Copy className="w-3 h-3" />
+                      <span>{log.telefone}</span>
+                    </button>
+                  </div>
+                </div>
+                <div className="flex space-x-2">
+                  <button 
+                    onClick={() => sendManualMessage(log.cliente, log.telefone)}
+                    disabled={!whatsappConnected}
+                    className="text-green-400 hover:text-green-300 disabled:text-gray-600"
+                  >
+                    <MessageSquare className="w-4 h-4" />
+                  </button>
+                  <button 
+                    onClick={() => window.open(`https://wa.me/${log.telefone.replace(/\D/g, '')}`)}
+                    className="text-blue-400 hover:text-blue-300"
+                  >
+                    <Phone className="w-4 h-4" />
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
+
+      {/* Modal QR Code */}
+      {showQRModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
+            <div className="flex items-center justify-between mb-6">
+              <h3 className="text-xl font-semibold text-white">Conectar WhatsApp</h3>
+              <button
+                onClick={() => {
+                  setShowQRModal(false)
+                  setWhatsappStatus('disconnected')
+                }}
+                className="text-gray-400 hover:text-white"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="text-center">
+              {whatsappStatus === 'connecting' && (
+                <>
+                  <div className="bg-white p-4 rounded-xl mb-4 inline-block">
+                    {qrCode ? (
+                      <img src={qrCode} alt="QR Code WhatsApp" className="w-48 h-48" />
+                    ) : (
+                      <div className="w-48 h-48 bg-gray-200 rounded-lg flex items-center justify-center">
+                        <RefreshCw className="w-8 h-8 text-gray-400 animate-spin" />
+                      </div>
+                    )}
+                  </div>
+                  <div className="space-y-3">
+                    <h4 className="font-semibold text-white">Como conectar:</h4>
+                    <div className="text-left space-y-2 text-sm text-gray-300">
+                      <div className="flex items-start space-x-2">
+                        <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">1</span>
+                        <span>Abra o WhatsApp no seu celular</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">2</span>
+                        <span>Toque em Menu (⋮) e depois em "WhatsApp Web"</span>
+                      </div>
+                      <div className="flex items-start space-x-2">
+                        <span className="bg-blue-600 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs font-bold">3</span>
+                        <span>Escaneie este código QR</span>
+                      </div>
+                    </div>
+                    <button 
+                      onClick={refreshQRCode}
+                      className="mt-4 bg-gray-700 hover:bg-gray-600 text-white px-4 py-2 rounded-lg flex items-center space-x-2 mx-auto"
+                    >
+                      <RefreshCw className="w-4 h-4" />
+                      <span>Atualizar QR Code</span>
+                    </button>
+                  </div>
+                </>
+              )}
+              
+              {whatsappStatus === 'error' && (
+                <div className="text-center">
+                  <div className="bg-red-600/20 p-4 rounded-xl mb-4">
+                    <AlertTriangle className="w-12 h-12 text-red-400 mx-auto mb-2" />
+                    <h4 className="font-semibold text-white mb-2">Erro na Conexão</h4>
+                    <p className="text-sm text-gray-300">
+                      Não foi possível conectar ao WhatsApp. Verifique sua conexão e tente novamente.
+                    </p>
+                  </div>
+                  <button 
+                    onClick={() => {
+                      setShowQRModal(false)
+                      connectWhatsApp()
+                    }}
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg"
+                  >
+                    Tentar Novamente
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 
@@ -2289,8 +2888,6 @@ export default function PainelBarbeiro() {
         return renderServicos()
       case 'clientes':
         return renderClientes()
-      case 'equipe':
-        return renderEquipe()
       case 'loja':
         return renderLoja()
       case 'whatsapp':
@@ -2390,6 +2987,9 @@ export default function PainelBarbeiro() {
               >
                 <item.icon className="w-5 h-5" />
                 <span>{item.label}</span>
+                {item.id === 'whatsapp' && whatsappConnected && (
+                  <div className="w-2 h-2 bg-green-400 rounded-full ml-auto"></div>
+                )}
               </button>
             ))}
           </nav>
@@ -2520,120 +3120,6 @@ export default function PainelBarbeiro() {
             <div className="p-3 bg-[#0C0C0D] rounded-lg cursor-pointer hover:bg-gray-700 transition-colors">
               <p className="text-sm text-white">Lembrete: Plano expira em 15 dias</p>
               <p className="text-xs text-gray-400">há 2 horas</p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Novo/Editar Membro da Equipe */}
-      {showNewTeamMemberModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">
-                {editingTeamMember ? 'Editar Membro' : 'Novo Membro da Equipe'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowNewTeamMemberModal(false)
-                  setEditingTeamMember(null)
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Nome</label>
-                <input
-                  type="text"
-                  placeholder="Nome completo"
-                  value={teamMemberForm.nome}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, nome: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Especialidade</label>
-                <input
-                  type="text"
-                  placeholder="Ex: Corte Clássico"
-                  value={teamMemberForm.especialidade}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, especialidade: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Telefone</label>
-                <input
-                  type="tel"
-                  placeholder="(11) 99999-9999"
-                  value={teamMemberForm.telefone}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, telefone: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Email (opcional)</label>
-                <input
-                  type="email"
-                  placeholder="email@exemplo.com"
-                  value={teamMemberForm.email}
-                  onChange={(e) => setTeamMemberForm({...teamMemberForm, email: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Salário (R$)</label>
-                  <input
-                    type="number"
-                    placeholder="100"
-                    value={teamMemberForm.salario}
-                    onChange={(e) => setTeamMemberForm({...teamMemberForm, salario: parseFloat(e.target.value) || 100})}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm text-gray-400 mb-2">Comissão (%)</label>
-                  <input
-                    type="number"
-                    placeholder="10"
-                    value={teamMemberForm.comissao}
-                    onChange={(e) => setTeamMemberForm({...teamMemberForm, comissao: parseFloat(e.target.value) || 10})}
-                    className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                  />
-                </div>
-              </div>
-              <div>
-                <label className="flex items-center space-x-2">
-                  <input
-                    type="checkbox"
-                    checked={teamMemberForm.ativo}
-                    onChange={(e) => setTeamMemberForm({...teamMemberForm, ativo: e.target.checked})}
-                    className="rounded"
-                  />
-                  <span className="text-sm text-gray-400">Membro ativo</span>
-                </label>
-              </div>
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={() => {
-                    setShowNewTeamMemberModal(false)
-                    setEditingTeamMember(null)
-                  }}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveTeamMember}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
-                >
-                  {editingTeamMember ? 'Atualizar' : 'Adicionar'}
-                </button>
-              </div>
             </div>
           </div>
         </div>
@@ -3272,7 +3758,22 @@ export default function PainelBarbeiro() {
                 <button
                   onClick={() => {
                     setShowCampaignModal(false)
-                    alert('Campanha enviada com sucesso!')
+                    if (whatsappConnected) {
+                      const newCampaign = {
+                        id: Date.now(),
+                        cliente: 'Campanha em Massa',
+                        telefone: 'Múltiplos contatos',
+                        tipo: 'campanha',
+                        mensagem: 'Nova campanha enviada para todos os clientes selecionados',
+                        status: 'enviado',
+                        timestamp: new Date().toLocaleString('pt-BR'),
+                        agendamentoId: null
+                      }
+                      setMessageLogs(prev => [newCampaign, ...prev])
+                      alert('Campanha enviada com sucesso!')
+                    } else {
+                      alert('Conecte o WhatsApp primeiro para enviar campanhas!')
+                    }
                   }}
                   className="flex-1 bg-purple-600 hover:bg-purple-700 text-white py-2 rounded-xl transition-colors"
                 >

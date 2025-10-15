@@ -3,6 +3,24 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   devIndicators: false, // Remove widget de desenvolvimento Next.js
   
+  // Desabilitar Turbopack para evitar erros de runtime
+  turbo: false,
+  
+  // Configuração de webpack para estabilidade
+  webpack: (config, { dev, isServer }) => {
+    // Configurações para evitar problemas de chunks
+    if (!isServer) {
+      config.resolve.fallback = {
+        ...config.resolve.fallback,
+        fs: false,
+        net: false,
+        tls: false,
+      };
+    }
+    
+    return config;
+  },
+  
   // Ignorar erros durante build (compatibilidade Vercel)
   eslint: {
     ignoreDuringBuilds: true,

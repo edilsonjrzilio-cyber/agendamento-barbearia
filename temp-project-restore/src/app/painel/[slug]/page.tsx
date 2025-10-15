@@ -1,0 +1,10 @@
+  // Estados para o novo sistema de agendamento
+  const [selectedBarber, setSelectedBarber] = useState(null)
+  const [showBarberSelection, setShowBarberSelection] = useState(false)
+  const [showCalendar, setShowCalendar] = useState(false)
+  const [selectedDateForBooking, setSelectedDateForBooking] = useState(null)
+  const [availableHours, setAvailableHours] = useState([])
+  const [selectedHour, setSelectedHour] = useState(null)
+  const [selectedTimeSlot, setSelectedTimeSlot] = useState(null)
+  const [currentMonth, setCurrentMonth] = useState(new Date().getMonth())
+  const [currentYear, setCurrentYear] = useState(new Date().getFullYear())
