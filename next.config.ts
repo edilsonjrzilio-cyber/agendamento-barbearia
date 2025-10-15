@@ -34,7 +34,7 @@ const nextConfig: NextConfig = {
         hostname: '*.supabase.com',
       },
       
-      // Firebase Storage
+      // Firebase Storage - URLs corretas
       {
         protocol: 'https',
         hostname: 'firebasestorage.googleapis.com',

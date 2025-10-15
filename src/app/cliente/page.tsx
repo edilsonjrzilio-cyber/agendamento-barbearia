@@ -68,7 +68,23 @@ export default function PainelCliente() {
     { id: 4, nome: 'Sobrancelha', preco: 15.00, duracao: '15min' }
   ]
 
-  const horarios = ['09:00', '10:00', '11:00', '14:00', '15:00', '16:00', '17:00', '18:00']
+  // Função para gerar horários de 15 em 15 minutos
+  const generateTimeSlots = () => {
+    const slots = []
+    const startHour = 8
+    const endHour = 18
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        slots.push(timeString)
+      }
+    }
+    
+    return slots
+  }
+
+  const horarios = generateTimeSlots()
 
   const notificacoes = [
     { id: 1, titulo: 'Agendamento Confirmado', mensagem: 'Seu agendamento para amanhã às 14:00 foi confirmado', tempo: '2h atrás', lida: false },
@@ -698,16 +714,16 @@ export default function PainelCliente() {
         </div>
       )}
 
-      {/* Modal de Novo Agendamento com Calendário */}
+      {/* Modal de Novo Agendamento com Calendário e Grade de Horários */}
       {showAgendamentoModal && (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-4xl border border-gray-600 max-h-[90vh] overflow-y-auto">
+          <div className="bg-[#1F2937] rounded-lg p-6 w-full max-w-6xl border border-gray-600 max-h-[90vh] overflow-y-auto">
             <h3 className="text-xl font-semibold text-white mb-4">
               {editingAgendamento ? 'Editar Agendamento' : 'Novo Agendamento'}
             </h3>
             
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Coluna Esquerda - Calendário */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              {/* Coluna 1 - Calendário */}
               <div>
                 <h4 className="text-lg font-medium text-white mb-4">Escolha a Data</h4>
                 
@@ -767,7 +783,56 @@ export default function PainelCliente() {
                 </div>
               </div>
 
-              {/* Coluna Direita - Formulário */}
+              {/* Coluna 2 - Grade de Horários */}
+              <div>
+                <h4 className="text-lg font-medium text-white mb-4">Horários Disponíveis</h4>
+                <div className="bg-[#374151] rounded-lg p-4 border border-gray-500 max-h-96 overflow-y-auto">
+                  <div className="grid grid-cols-3 gap-2">
+                    {horarios.map((horario) => {
+                      const isOccupied = agendamentos.some(ag => 
+                        ag.data === selectedDate && ag.hora === horario
+                      )
+                      
+                      return (
+                        <button
+                          key={horario}
+                          onClick={() => !isOccupied && setSelectedTime(horario)}
+                          disabled={isOccupied || !selectedDate}
+                          className={`p-2 text-sm rounded-lg transition-colors ${
+                            isOccupied
+                              ? 'bg-red-600 text-white cursor-not-allowed'
+                              : !selectedDate
+                              ? 'bg-gray-600 text-gray-400 cursor-not-allowed'
+                              : selectedTime === horario
+                              ? 'bg-[#3B82F6] text-white'
+                              : 'bg-green-600 text-white hover:bg-green-500'
+                          }`}
+                        >
+                          {horario}
+                        </button>
+                      )
+                    })}
+                  </div>
+                  
+                  {/* Legenda */}
+                  <div className="mt-4 space-y-2 text-xs">
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-green-600 rounded"></div>
+                      <span className="text-gray-300">Disponível</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-red-600 rounded"></div>
+                      <span className="text-gray-300">Ocupado</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <div className="w-3 h-3 bg-[#3B82F6] rounded"></div>
+                      <span className="text-gray-300">Selecionado</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Coluna 3 - Formulário */}
               <div className="space-y-4">
                 <div>
                   <label className="block text-gray-300 text-sm mb-2">Barbeiro</label>
@@ -813,19 +878,14 @@ export default function PainelCliente() {
                 </div>
 
                 <div>
-                  <label className="block text-gray-300 text-sm mb-2">Horário</label>
-                  <select
+                  <label className="block text-gray-300 text-sm mb-2">Horário Selecionado</label>
+                  <input
+                    type="text"
                     value={selectedTime}
-                    onChange={(e) => setSelectedTime(e.target.value)}
-                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white focus:outline-none focus:border-blue-400"
-                  >
-                    <option value="">Selecione um horário</option>
-                    {horarios.map((horario) => (
-                      <option key={horario} value={horario}>
-                        {horario}
-                      </option>
-                    ))}
-                  </select>
+                    readOnly
+                    className="w-full bg-[#374151] border border-gray-500 rounded-lg px-3 py-2 text-white"
+                    placeholder="Selecione um horário na grade"
+                  />
                 </div>
 
                 {/* Resumo do Agendamento */}
