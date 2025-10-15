@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useParams } from 'next/navigation'
 import { 
   Calendar, 
   Clock, 
@@ -67,8 +67,11 @@ import {
   UserPlus
 } from 'lucide-react'
 
-export default function PainelBarbeiro() {
+export default function PainelBarbeiroSlug() {
   const router = useRouter()
+  const params = useParams()
+  const slug = params.slug as string
+  
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [activeSection, setActiveSection] = useState('dashboard')
   const [showProfileMenu, setShowProfileMenu] = useState(false)
@@ -119,15 +122,15 @@ export default function PainelBarbeiro() {
     permitirAvaliacoes: true
   })
 
-  // Mock data com estados gerenciáveis
+  // Mock data com estados gerenciáveis - baseado no slug
   const barbeiro = {
-    nome: "João Silva",
-    barbearia: "Barbearia Premium",
+    nome: `Barbeiro ${slug}`,
+    barbearia: `Barbearia ${slug}`,
     plano: "Premium",
     diasRestantes: 15,
     avatar: "/api/placeholder/40/40",
     telefone: "(11) 99999-9999",
-    email: "joao@barbeariapremium.com",
+    email: `${slug}@barbearia.com`,
     endereco: "Rua das Flores, 123 - Centro"
   }
 
@@ -212,7 +215,7 @@ export default function PainelBarbeiro() {
     corFundo: '#0C0C0D',
     tema: 'escuro',
     fonte: 'Inter',
-    linkPublico: 'barbearia-premium',
+    linkPublico: slug,
     statusPagina: 'ativa',
     horarios: {
       segunda: { inicio: '08:00', fim: '18:00', aberto: true },
@@ -770,7 +773,7 @@ export default function PainelBarbeiro() {
   }
 
   const handleVisaoCliente = () => {
-    window.open('/cliente', '_blank')
+    window.open(`/cliente/${slug}`, '_blank')
   }
 
   const connectWhatsApp = () => {
@@ -2420,7 +2423,7 @@ export default function PainelBarbeiro() {
           {/* Desktop Header */}
           <div className="hidden lg:flex items-center justify-between p-6 bg-[#141416] border-b border-gray-800">
             <div>
-              <h1 className="text-2xl font-bold text-white">Painel do Barbeiro</h1>
+              <h1 className="text-2xl font-bold text-white">Painel do Barbeiro - {slug}</h1>
               <p className="text-gray-400">Bem-vindo, {barbeiro.nome}</p>
             </div>
 
