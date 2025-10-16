@@ -73,6 +73,405 @@ import {
   AlertTriangle
 } from 'lucide-react'
 
+// Componente CalendarBooking15 integrado
+const CalendarBooking15 = ({ onClose, onBookingComplete }) => {
+  const [currentDate, setCurrentDate] = useState(new Date())
+  const [selectedDate, setSelectedDate] = useState(null)
+  const [selectedTime, setSelectedTime] = useState(null)
+  const [bookingStep, setBookingStep] = useState('calendar') // calendar, time, form
+  const [bookingForm, setBookingForm] = useState({
+    name: '',
+    phone: '',
+    service: '',
+    notes: ''
+  })
+
+  // Gerar horários de 15 em 15 minutos
+  const generateTimeSlots = () => {
+    const slots = []
+    const startHour = 8
+    const endHour = 18
+    
+    for (let hour = startHour; hour < endHour; hour++) {
+      for (let minute = 0; minute < 60; minute += 15) {
+        const timeString = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`
+        const isBooked = Math.random() > 0.7 // 30% chance de estar ocupado
+        slots.push({
+          time: timeString,
+          available: !isBooked,
+          type: isBooked ? 'booked' : 'available'
+        })
+      }
+    }
+    
+    return slots
+  }
+
+  const [timeSlots] = useState(generateTimeSlots())
+
+  // Gerar calendário
+  const generateCalendar = () => {
+    const year = currentDate.getFullYear()
+    const month = currentDate.getMonth()
+    const firstDay = new Date(year, month, 1)
+    const lastDay = new Date(year, month + 1, 0)
+    const daysInMonth = lastDay.getDate()
+    const startingDayOfWeek = firstDay.getDay()
+    
+    const days = []
+    
+    // Dias vazios do início
+    for (let i = 0; i < startingDayOfWeek; i++) {
+      days.push(null)
+    }
+    
+    // Dias do mês
+    for (let day = 1; day <= daysInMonth; day++) {
+      const date = new Date(year, month, day)
+      const isPast = date < new Date(new Date().setHours(0, 0, 0, 0))
+      const isToday = date.toDateString() === new Date().toDateString()
+      
+      days.push({
+        day,
+        date,
+        isPast,
+        isToday,
+        available: !isPast
+      })
+    }
+    
+    return days
+  }
+
+  const monthNames = [
+    'Janeiro', 'Fevereiro', 'Março', 'Abril', 'Maio', 'Junho',
+    'Julho', 'Agosto', 'Setembro', 'Outubro', 'Novembro', 'Dezembro'
+  ]
+
+  const previousMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1, 1))
+  }
+
+  const nextMonth = () => {
+    setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1, 1))
+  }
+
+  const selectDate = (dayObj) => {
+    if (dayObj && dayObj.available) {
+      setSelectedDate(dayObj.date)
+      setBookingStep('time')
+    }
+  }
+
+  const selectTime = (slot) => {
+    if (slot.available) {
+      setSelectedTime(slot.time)
+      setBookingStep('form')
+    }
+  }
+
+  const handleBookingSubmit = () => {
+    if (!bookingForm.name || !bookingForm.phone || !bookingForm.service) {
+      alert('Por favor, preencha todos os campos obrigatórios.')
+      return
+    }
+
+    const booking = {
+      id: Date.now(),
+      date: selectedDate.toISOString().split('T')[0],
+      time: selectedTime,
+      name: bookingForm.name,
+      phone: bookingForm.phone,
+      service: bookingForm.service,
+      notes: bookingForm.notes,
+      status: 'confirmed'
+    }
+
+    onBookingComplete?.(booking)
+    alert('✅ Agendamento realizado com sucesso!')
+    onClose?.()
+  }
+
+  const services = [
+    'Corte Masculino',
+    'Corte + Barba',
+    'Barba',
+    'Sobrancelha',
+    'Hidratação',
+    'Corte Feminino'
+  ]
+
+  return (
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+      <div className="bg-[#141416] rounded-2xl w-full max-w-4xl border border-gray-800 max-h-[90vh] overflow-y-auto">
+        {/* Header */}
+        <div className="flex items-center justify-between p-6 border-b border-gray-800">
+          <div>
+            <h2 className="text-2xl font-bold text-white">Novo Agendamento</h2>
+            <p className="text-gray-400">Sistema de agendamento com intervalos de 15 minutos</p>
+          </div>
+          <button
+            onClick={onClose}
+            className="text-gray-400 hover:text-white transition-colors"
+          >
+            <X className="w-6 h-6" />
+          </button>
+        </div>
+
+        <div className="p-6">
+          {/* Progress Steps */}
+          <div className="flex items-center justify-center mb-8">
+            <div className="flex items-center space-x-4">
+              <div className={`flex items-center space-x-2 ${bookingStep === 'calendar' ? 'text-blue-400' : bookingStep === 'time' || bookingStep === 'form' ? 'text-green-400' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'calendar' ? 'bg-blue-600' : bookingStep === 'time' || bookingStep === 'form' ? 'bg-green-600' : 'bg-gray-600'}`}>
+                  <Calendar className="w-4 h-4" />
+                </div>
+                <span className="font-medium">Data</span>
+              </div>
+              <div className="w-8 h-0.5 bg-gray-600"></div>
+              <div className={`flex items-center space-x-2 ${bookingStep === 'time' ? 'text-blue-400' : bookingStep === 'form' ? 'text-green-400' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'time' ? 'bg-blue-600' : bookingStep === 'form' ? 'bg-green-600' : 'bg-gray-600'}`}>
+                  <Clock className="w-4 h-4" />
+                </div>
+                <span className="font-medium">Horário</span>
+              </div>
+              <div className="w-8 h-0.5 bg-gray-600"></div>
+              <div className={`flex items-center space-x-2 ${bookingStep === 'form' ? 'text-blue-400' : 'text-gray-400'}`}>
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${bookingStep === 'form' ? 'bg-blue-600' : 'bg-gray-600'}`}>
+                  <User className="w-4 h-4" />
+                </div>
+                <span className="font-medium">Dados</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Calendar Step */}
+          {bookingStep === 'calendar' && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                {/* Calendar Header */}
+                <div className="flex items-center justify-between mb-6">
+                  <button
+                    onClick={previousMonth}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronLeft className="w-5 h-5 text-white" />
+                  </button>
+                  <h3 className="text-xl font-semibold text-white">
+                    {monthNames[currentDate.getMonth()]} {currentDate.getFullYear()}
+                  </h3>
+                  <button
+                    onClick={nextMonth}
+                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+                  >
+                    <ChevronRight className="w-5 h-5 text-white" />
+                  </button>
+                </div>
+
+                {/* Days of Week */}
+                <div className="grid grid-cols-7 gap-2 mb-4">
+                  {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
+                    <div key={day} className="text-center text-gray-400 text-sm p-2 font-medium">
+                      {day}
+                    </div>
+                  ))}
+                </div>
+
+                {/* Calendar Grid */}
+                <div className="grid grid-cols-7 gap-2">
+                  {generateCalendar().map((dayObj, index) => (
+                    <button
+                      key={index}
+                      onClick={() => selectDate(dayObj)}
+                      disabled={!dayObj || !dayObj.available}
+                      className={`
+                        p-3 text-sm rounded-lg transition-all duration-200 min-h-[50px] font-medium
+                        ${dayObj 
+                          ? dayObj.isToday
+                            ? 'bg-blue-600 text-white shadow-lg'
+                            : dayObj.available
+                            ? 'bg-gray-700 text-white hover:bg-blue-600 hover:scale-105'
+                            : 'bg-gray-800 text-gray-500 cursor-not-allowed'
+                          : ''
+                        }
+                      `}
+                    >
+                      {dayObj ? dayObj.day : ''}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center justify-center space-x-6 mt-6 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-blue-600 rounded"></div>
+                    <span className="text-gray-400">Hoje</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gray-700 rounded"></div>
+                    <span className="text-gray-400">Disponível</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-gray-800 rounded"></div>
+                    <span className="text-gray-400">Indisponível</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Time Step */}
+          {bookingStep === 'time' && selectedDate && (
+            <div className="max-w-4xl mx-auto">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">Escolha o Horário</h3>
+                    <p className="text-blue-400">
+                      {selectedDate.toLocaleDateString('pt-BR', { 
+                        weekday: 'long', 
+                        day: 'numeric', 
+                        month: 'long' 
+                      })}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setBookingStep('calendar')}
+                    className="text-gray-400 hover:text-white flex items-center space-x-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Voltar</span>
+                  </button>
+                </div>
+
+                {/* Time Slots Grid */}
+                <div className="grid grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-3">
+                  {timeSlots.map((slot, index) => (
+                    <button
+                      key={index}
+                      onClick={() => selectTime(slot)}
+                      disabled={!slot.available}
+                      className={`
+                        p-3 text-sm rounded-lg transition-all duration-200 font-medium
+                        ${slot.available
+                          ? 'bg-green-600 text-white hover:bg-green-700 hover:scale-105'
+                          : 'bg-red-600/20 text-red-400 cursor-not-allowed'
+                        }
+                      `}
+                    >
+                      {slot.time}
+                    </button>
+                  ))}
+                </div>
+
+                {/* Legend */}
+                <div className="flex items-center justify-center space-x-6 mt-6 text-sm">
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-green-600 rounded"></div>
+                    <span className="text-gray-400">Disponível</span>
+                  </div>
+                  <div className="flex items-center space-x-2">
+                    <div className="w-4 h-4 bg-red-600/20 rounded border border-red-600/50"></div>
+                    <span className="text-gray-400">Ocupado</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Form Step */}
+          {bookingStep === 'form' && selectedDate && selectedTime && (
+            <div className="max-w-2xl mx-auto">
+              <div className="bg-[#0C0C0D] rounded-xl p-6 border border-gray-800">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h3 className="text-xl font-semibold text-white">Finalizar Agendamento</h3>
+                    <p className="text-blue-400">
+                      {selectedDate.toLocaleDateString('pt-BR')} às {selectedTime}
+                    </p>
+                  </div>
+                  <button
+                    onClick={() => setBookingStep('time')}
+                    className="text-gray-400 hover:text-white flex items-center space-x-2"
+                  >
+                    <ChevronLeft className="w-4 h-4" />
+                    <span>Voltar</span>
+                  </button>
+                </div>
+
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Nome Completo *</label>
+                      <input
+                        type="text"
+                        value={bookingForm.name}
+                        onChange={(e) => setBookingForm({...bookingForm, name: e.target.value})}
+                        className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600"
+                        placeholder="Digite seu nome completo"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm text-gray-400 mb-2">Telefone *</label>
+                      <input
+                        type="tel"
+                        value={bookingForm.phone}
+                        onChange={(e) => setBookingForm({...bookingForm, phone: e.target.value})}
+                        className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600"
+                        placeholder="(11) 99999-9999"
+                      />
+                    </div>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Serviço *</label>
+                    <select
+                      value={bookingForm.service}
+                      onChange={(e) => setBookingForm({...bookingForm, service: e.target.value})}
+                      className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600"
+                    >
+                      <option value="">Selecione um serviço</option>
+                      {services.map(service => (
+                        <option key={service} value={service}>{service}</option>
+                      ))}
+                    </select>
+                  </div>
+                  
+                  <div>
+                    <label className="block text-sm text-gray-400 mb-2">Observações</label>
+                    <textarea
+                      value={bookingForm.notes}
+                      onChange={(e) => setBookingForm({...bookingForm, notes: e.target.value})}
+                      className="w-full bg-[#141416] border border-gray-800 rounded-xl px-4 py-3 text-white focus:outline-none focus:border-blue-600 resize-none"
+                      rows={3}
+                      placeholder="Alguma observação especial?"
+                    />
+                  </div>
+
+                  <div className="flex space-x-4 pt-4">
+                    <button
+                      onClick={() => setBookingStep('time')}
+                      className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-3 rounded-xl transition-colors"
+                    >
+                      Voltar
+                    </button>
+                    <button
+                      onClick={handleBookingSubmit}
+                      className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-xl transition-colors font-medium"
+                    >
+                      Confirmar Agendamento
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    </div>
+  )
+}
+
 export default function PainelBarbeiro() {
   const router = useRouter()
   const [sidebarOpen, setSidebarOpen] = useState(false)
@@ -485,62 +884,40 @@ export default function PainelBarbeiro() {
     return personalizacaoForm.horarios[dayName]?.aberto || false
   }
 
-  // Função para iniciar novo agendamento
+  // Função para iniciar novo agendamento com CalendarBooking15
   const startNewAppointment = () => {
-    setShowBarberSelection(true)
-    setSelectedBarber(null)
-    setSelectedDateForBooking(null)
-    setSelectedHour(null)
-    setAppointmentForm({ cliente: '', servico: '', data: '', horario: '', telefone: '', valor: 0, barbeiro: '' })
+    setShowNewAppointmentModal(true)
   }
 
-  // Função para selecionar barbeiro
-  const selectBarber = (barber) => {
-    setSelectedBarber(barber)
-    setShowBarberSelection(false)
-    setShowCalendar(true)
-  }
-
-  // Função para selecionar data
-  const selectDate = (date) => {
-    if (isDateAvailable(date)) {
-      setSelectedDateForBooking(date)
-      const hours = generateAvailableHours(date, selectedBarber.id)
-      setAvailableHours(hours)
+  // Função para lidar com agendamento completo do CalendarBooking15
+  const handleBookingComplete = (booking) => {
+    const newAppointment = {
+      id: booking.id,
+      cliente: booking.name,
+      servico: booking.service,
+      horario: booking.time,
+      status: 'confirmado',
+      telefone: booking.phone,
+      valor: 60, // Valor padrão, pode ser ajustado baseado no serviço
+      data: booking.date,
+      barbeiro: "João Silva" // Barbeiro padrão, pode ser selecionado
     }
-  }
-
-  // Função para selecionar horário
-  const selectHour = (hour) => {
-    if (hour.available) {
-      setSelectedHour(hour.time)
-      setAppointmentForm({
-        ...appointmentForm,
-        data: selectedDateForBooking,
-        horario: hour.time,
-        barbeiro: selectedBarber.nome
-      })
-      setShowCalendar(false)
-      setShowNewAppointmentModal(true)
-    }
-  }
-
-  // Funções para navegação do calendário
-  const previousMonth = () => {
-    if (currentMonth === 0) {
-      setCurrentMonth(11)
-      setCurrentYear(currentYear - 1)
-    } else {
-      setCurrentMonth(currentMonth - 1)
-    }
-  }
-
-  const nextMonth = () => {
-    if (currentMonth === 11) {
-      setCurrentMonth(0)
-      setCurrentYear(currentYear + 1)
-    } else {
-      setCurrentMonth(currentMonth + 1)
+    
+    setAgendamentos(prev => [...prev, newAppointment])
+    
+    // Enviar confirmação automática se WhatsApp estiver conectado
+    if (whatsappConnected && whatsappSettings.autoConfirmation) {
+      const confirmationMessage = {
+        id: Date.now() + 1,
+        cliente: booking.name,
+        telefone: booking.phone,
+        tipo: 'confirmacao',
+        mensagem: whatsappSettings.welcomeMessage,
+        status: 'enviado',
+        timestamp: new Date().toLocaleString('pt-BR'),
+        agendamentoId: newAppointment.id
+      }
+      setMessageLogs(prev => [confirmationMessage, ...prev])
     }
   }
 
@@ -934,37 +1311,6 @@ export default function PainelBarbeiro() {
 
   const handleVisaoCliente = () => {
     window.open('/cliente', '_blank')
-  }
-
-  // Função para gerar calendário com navegação
-  const generateCalendar = () => {
-    const firstDay = new Date(currentYear, currentMonth, 1)
-    const lastDay = new Date(currentYear, currentMonth + 1, 0)
-    const daysInMonth = lastDay.getDate()
-    const startingDayOfWeek = firstDay.getDay()
-    
-    const days = []
-    
-    // Dias vazios do início do mês
-    for (let i = 0; i < startingDayOfWeek; i++) {
-      days.push(null)
-    }
-    
-    // Dias do mês
-    for (let day = 1; day <= daysInMonth; day++) {
-      const date = `${currentYear}-${(currentMonth + 1).toString().padStart(2, '0')}-${day.toString().padStart(2, '0')}`
-      const isAvailable = isDateAvailable(date)
-      const isPast = new Date(date) < new Date(new Date().toDateString())
-      
-      days.push({
-        day,
-        date,
-        available: isAvailable && !isPast,
-        isPast
-      })
-    }
-    
-    return days
   }
 
   // Função para obter nome do mês
@@ -3125,268 +3471,12 @@ export default function PainelBarbeiro() {
         </div>
       )}
 
-      {/* Modal Seleção de Barbeiro */}
-      {showBarberSelection && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">Selecionar Barbeiro</h3>
-              <button
-                onClick={() => setShowBarberSelection(false)}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-3">
-              {barbeiros.filter(b => b.ativo).map((barber) => (
-                <button
-                  key={barber.id}
-                  onClick={() => selectBarber(barber)}
-                  className="w-full flex items-center space-x-4 p-4 bg-[#0C0C0D] rounded-xl border border-gray-800 hover:bg-gray-700 transition-colors"
-                >
-                  <div className="w-12 h-12 bg-gray-600 rounded-full flex items-center justify-center">
-                    <User className="w-6 h-6 text-gray-300" />
-                  </div>
-                  <div className="text-left">
-                    <p className="font-medium text-white">{barber.nome}</p>
-                    <p className="text-sm text-gray-400">{barber.especialidade}</p>
-                  </div>
-                  <ChevronRight className="w-5 h-5 text-gray-400 ml-auto" />
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Calendário */}
-      {showCalendar && selectedBarber && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-2xl border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-xl font-semibold text-white">Escolha o Horário</h3>
-                <p className="text-blue-400 font-medium">Barbeiro: {selectedBarber.nome}</p>
-                {selectedDateForBooking && (
-                  <p className="text-blue-400 font-medium">Data: {new Date(selectedDateForBooking).toLocaleDateString('pt-BR')}</p>
-                )}
-              </div>
-              <button
-                onClick={() => {
-                  setShowCalendar(false)
-                  setSelectedBarber(null)
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              {/* Calendário */}
-              <div>
-                <div className="flex items-center justify-between mb-4">
-                  <button 
-                    onClick={previousMonth}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <ChevronLeft className="w-5 h-5 text-white" />
-                  </button>
-                  <h4 className="font-semibold text-white">
-                    {getMonthName(currentMonth)} {currentYear}
-                  </h4>
-                  <button 
-                    onClick={nextMonth}
-                    className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
-                  >
-                    <ChevronRight className="w-5 h-5 text-white" />
-                  </button>
-                </div>
-                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
-                  <div className="grid grid-cols-7 gap-2 mb-4">
-                    {['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb'].map(day => (
-                      <div key={day} className="text-center text-gray-400 text-sm p-2">{day}</div>
-                    ))}
-                  </div>
-                  <div className="grid grid-cols-7 gap-2">
-                    {generateCalendar().map((day, index) => (
-                      <button
-                        key={index}
-                        onClick={() => day && selectDate(day.date)}
-                        disabled={!day || !day.available}
-                        className={`p-2 text-sm rounded-lg transition-colors ${
-                          day && day.available
-                            ? selectedDateForBooking === day.date
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-700 text-white hover:bg-gray-600'
-                            : day && day.isPast
-                            ? 'text-gray-600 cursor-not-allowed'
-                            : day
-                            ? 'text-gray-500 cursor-not-allowed'
-                            : ''
-                        }`}
-                      >
-                        {day ? day.day : ''}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              {/* Horários */}
-              <div>
-                <h4 className="font-semibold text-white mb-4">
-                  {selectedDateForBooking ? 'Horários Disponíveis' : 'Selecione uma data primeiro'}
-                </h4>
-                <div className="bg-[#0C0C0D] rounded-xl p-4 border border-gray-800">
-                  {selectedDateForBooking ? (
-                    <div className="grid grid-cols-3 gap-2">
-                      {availableHours.map((hour, index) => (
-                        <button
-                          key={index}
-                          onClick={() => selectHour(hour)}
-                          disabled={!hour.available}
-                          className={`p-2 text-sm rounded-lg transition-colors ${
-                            hour.available
-                              ? selectedHour === hour.time
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-white hover:bg-gray-600'
-                              : 'bg-red-900/20 text-red-400 cursor-not-allowed'
-                          }`}
-                        >
-                          {hour.time}
-                        </button>
-                      ))}
-                    </div>
-                  ) : (
-                    <p className="text-gray-400 text-center py-8">Selecione uma data para ver os horários disponíveis</p>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Modal Novo/Editar Agendamento */}
+      {/* CalendarBooking15 Modal */}
       {showNewAppointmentModal && (
-        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-          <div className="bg-[#141416] rounded-2xl p-6 w-full max-w-md border border-gray-800">
-            <div className="flex items-center justify-between mb-6">
-              <h3 className="text-xl font-semibold text-white">
-                {editingAppointment ? 'Editar Agendamento' : 'Novo Agendamento'}
-              </h3>
-              <button
-                onClick={() => {
-                  setShowNewAppointmentModal(false)
-                  setEditingAppointment(null)
-                }}
-                className="text-gray-400 hover:text-white"
-              >
-                <X className="w-6 h-6" />
-              </button>
-            </div>
-            <div className="space-y-4">
-              {appointmentForm.barbeiro && (
-                <div className="bg-[#0C0C0D] rounded-xl p-3 border border-gray-800">
-                  <p className="text-sm text-gray-400">Barbeiro selecionado:</p>
-                  <p className="text-white font-medium">{appointmentForm.barbeiro}</p>
-                  <p className="text-sm text-gray-400">Data: {appointmentForm.data} às {appointmentForm.horario}</p>
-                </div>
-              )}
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Cliente</label>
-                <input
-                  type="text"
-                  placeholder="Nome do cliente"
-                  value={appointmentForm.cliente}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, cliente: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Telefone</label>
-                <input
-                  type="tel"
-                  placeholder="(11) 99999-9999"
-                  value={appointmentForm.telefone}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, telefone: e.target.value})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Serviço</label>
-                <select 
-                  value={appointmentForm.servico}
-                  onChange={(e) => {
-                    const selectedService = servicos.find(s => s.nome === e.target.value)
-                    setAppointmentForm({
-                      ...appointmentForm, 
-                      servico: e.target.value,
-                      valor: selectedService ? selectedService.preco : 0
-                    })
-                  }}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
-                >
-                  <option value="">Selecione um serviço</option>
-                  {servicos.filter(s => s.ativo).map(servico => (
-                    <option key={servico.id} value={servico.nome}>{servico.nome} - R$ {servico.preco}</option>
-                  ))}
-                </select>
-              </div>
-              {!appointmentForm.barbeiro && (
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Data</label>
-                    <input
-                      type="date"
-                      value={appointmentForm.data}
-                      onChange={(e) => setAppointmentForm({...appointmentForm, data: e.target.value})}
-                      className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                  <div>
-                    <label className="block text-sm text-gray-400 mb-2">Horário</label>
-                    <input
-                      type="time"
-                      value={appointmentForm.horario}
-                      onChange={(e) => setAppointmentForm({...appointmentForm, horario: e.target.value})}
-                      className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white focus:outline-none focus:border-blue-600"
-                    />
-                  </div>
-                </div>
-              )}
-              <div>
-                <label className="block text-sm text-gray-400 mb-2">Valor</label>
-                <input
-                  type="number"
-                  placeholder="0"
-                  value={appointmentForm.valor}
-                  onChange={(e) => setAppointmentForm({...appointmentForm, valor: parseFloat(e.target.value) || 0})}
-                  className="w-full bg-[#0C0C0D] border border-gray-800 rounded-xl px-4 py-2 text-white placeholder-gray-400 focus:outline-none focus:border-blue-600"
-                />
-              </div>
-              <div className="flex space-x-3 pt-4">
-                <button
-                  onClick={() => {
-                    setShowNewAppointmentModal(false)
-                    setEditingAppointment(null)
-                  }}
-                  className="flex-1 bg-gray-700 hover:bg-gray-600 text-white py-2 rounded-xl transition-colors"
-                >
-                  Cancelar
-                </button>
-                <button
-                  onClick={handleSaveAppointment}
-                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 rounded-xl transition-colors"
-                >
-                  {editingAppointment ? 'Atualizar' : 'Agendar'}
-                </button>
-              </div>
-            </div>
-          </div>
-        </div>
+        <CalendarBooking15 
+          onClose={() => setShowNewAppointmentModal(false)}
+          onBookingComplete={handleBookingComplete}
+        />
       )}
 
       {/* Modal Novo/Editar Cliente */}
